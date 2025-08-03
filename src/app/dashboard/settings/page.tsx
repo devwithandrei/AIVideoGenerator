@@ -1,3 +1,4 @@
+import { UserProfile } from "@clerk/nextjs";
 
 export default function SettingsPage() {
   return (
@@ -10,7 +11,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex justify-center">
-        <p>Settings will be available here when authentication is enabled.</p>
+        <UserProfile path="/dashboard/settings" routing="path" />
       </div>
     </div>
   );
