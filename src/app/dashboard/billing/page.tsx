@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, CreditCard } from "lucide-react";
 
 const plans = [
   {

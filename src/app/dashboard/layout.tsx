@@ -16,7 +16,7 @@ export default function DashboardLayout({
           <div className="flex flex-col h-full">
             <div className="p-4 flex items-center gap-2">
                <Gem className="h-8 w-8 text-primary" />
-               <h1 className="text-xl font-bold font-headline text-primary-foreground group-data-[collapsible=icon]:hidden">MediaForge AI</h1>
+               <h1 className="text-xl font-bold font-headline text-foreground group-data-[collapsible=icon]:hidden">MediaForge AI</h1>
             </div>
             <DashboardNav />
           </div>
