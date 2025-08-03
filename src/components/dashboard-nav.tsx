@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { LayoutDashboard, Clapperboard, ImageIcon, Map, CreditCard, Settings, Film } from "lucide-react";
+import { LayoutDashboard, Clapperboard, ImageIcon, Map, CreditCard, Film } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard /> },
