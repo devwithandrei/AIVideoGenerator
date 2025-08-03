@@ -66,7 +66,9 @@ const generateMapAnimationFlow = ai.defineFlow(
       model: googleAI.model('veo-2.0-generate-001'),
       prompt: [
         {
-          media: {url: mapImage.url},
+          media: {
+            url: mapImage.url,
+          },
         },
         {
           text: `Using the provided map image as the background, create a visually appealing animated video that illustrates the route: "${input.locationDetails}".
