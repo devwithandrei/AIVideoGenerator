@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { Gem } from "lucide-react";
+import { Gem, PanelLeft } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen">
+      <div className="flex min-h-screen">
         <Sidebar>
           <div className="flex flex-col h-full">
              <div className="p-4 flex items-center justify-between">
@@ -19,6 +19,9 @@ export default function DashboardLayout({
                  <Gem className="h-8 w-8 text-primary" />
                  <h1 className="text-xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">MediaForge AI</h1>
                </Link>
+                <SidebarTrigger className="ml-auto hidden md:flex">
+                  <PanelLeft />
+                </SidebarTrigger>
             </div>
             <DashboardNav />
           </div>
@@ -26,7 +29,7 @@ export default function DashboardLayout({
         <SidebarInset>
           <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
             <div className="flex items-center h-14 px-4 sm:px-8">
-              <SidebarTrigger className="mr-4" />
+              <SidebarTrigger className="mr-4 md:hidden" />
               <div className="flex items-center w-full justify-end">
                 {/* UserNav removed since authentication is disabled */}
               </div>
