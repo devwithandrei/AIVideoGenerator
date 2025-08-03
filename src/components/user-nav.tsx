@@ -21,7 +21,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src="" alt="User" />
+            <AvatarImage src="https://placehold.co/40x40.png" alt="User" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
         </Button>
@@ -47,12 +47,6 @@ export function UserNav() {
              <Link href="/dashboard/billing">
                 <CreditCard className="mr-2 h-4 w-4" />
                 <span>Billing</span>
-             </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-             <Link href="/dashboard/settings">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
              </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

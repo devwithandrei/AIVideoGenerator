@@ -11,7 +11,6 @@ const navItems = [
   { href: "/dashboard/image-editor", label: "Image Editor", icon: <ImageIcon /> },
   { href: "/dashboard/map-animation", label: "Map Animation", icon: <Map /> },
   { href: "/dashboard/billing", label: "Billing", icon: <CreditCard /> },
-  { href: "/dashboard/settings", label: "Settings", icon: <Settings /> },
 ];
 
 export function DashboardNav() {

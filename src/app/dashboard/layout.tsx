@@ -4,7 +4,6 @@ import { SidebarProvider, Sidebar, SidebarTrigger, SidebarInset } from "@/compon
 import { DashboardNav } from "@/components/dashboard-nav";
 import { Gem } from "lucide-react";
 import { UserNav } from "@/components/user-nav";
-import { ClerkLoaded } from "@clerk/nextjs";
 
 export default function DashboardLayout({
   children,
@@ -30,9 +29,7 @@ export default function DashboardLayout({
             <div className="flex items-center h-14 px-4 sm:px-8">
               <SidebarTrigger className="mr-4" />
               <div className="flex items-center w-full justify-end">
-                <ClerkLoaded>
-                  <UserNav />
-                </ClerkLoaded>
+                <UserNav />
               </div>
             </div>
           </header>

@@ -25,11 +25,6 @@ export default function LandingPage() {
           <Link href="/dashboard/billing" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
             Pricing
           </Link>
-          <Button asChild variant="ghost">
-            <Link href="/dashboard" prefetch={false}>
-              Sign In
-            </Link>
-          </Button>
           <Button asChild style={{backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))'}}>
             <Link href="/dashboard" prefetch={false}>
               Get Started
@@ -53,7 +48,7 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button asChild size="lg" style={{backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))'}}>
                     <Link href="/dashboard" prefetch={false}>
-                      Start Your Free Trial
+                      Start For Free
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline">
@@ -119,13 +114,13 @@ export default function LandingPage() {
                 Ready to Forge Your Next Masterpiece?
               </h2>
               <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Join thousands of creators and start bringing your vision to life today. No credit card required for trial.
+                Jump into the studio and start bringing your vision to life today.
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
               <Button asChild size="lg" className="w-full" style={{backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))'}}>
                  <Link href="/dashboard" prefetch={false}>
-                      Sign Up for Free
+                      Go to Dashboard
                     </Link>
               </Button>
             </div>
