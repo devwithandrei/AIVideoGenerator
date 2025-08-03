@@ -16,6 +16,7 @@ import { Readable } from 'stream';
 
 const GenerateVideoFromTextInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the video from.'),
+  model: z.string().describe('The AI model to use for generation.'),
   aspectRatio: z.string().describe('The aspect ratio of the video.'),
   resolution: z.string().describe('The resolution of the video.'),
   format: z.string().describe('The file format of the video.'),
@@ -31,6 +32,15 @@ export async function generateVideoFromText(input: GenerateVideoFromTextInput): 
   return generateVideoFromTextFlow(input);
 }
 
+// A simple mapping from the friendly names to the actual model identifiers.
+// This can be expanded as more models become available.
+const modelMapping: Record<string, string> = {
+  'fast-generation': 'veo-2.0-generate-001',
+  'cinematic-generation': 'veo-2.0-generate-001',
+  'stylized-animation': 'veo-2.0-generate-001',
+};
+
+
 const generateVideoFromTextFlow = ai.defineFlow(
   {
     name: 'generateVideoFromTextFlow',
@@ -38,8 +48,10 @@ const generateVideoFromTextFlow = ai.defineFlow(
     outputSchema: GenerateVideoFromTextOutputSchema,
   },
   async input => {
+    const modelId = modelMapping[input.model] || 'veo-2.0-generate-001';
+
     let { operation } = await ai.generate({
-      model: googleAI.model('veo-2.0-generate-001'),
+      model: googleAI.model(modelId),
       prompt: input.prompt,
       config: {
         durationSeconds: 5,

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,10 +21,17 @@ import { Loader2, Video } from "lucide-react";
 import { generateVideoFromText } from "@/ai/flows/generate-video-from-text";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const models = [
+  { id: "fast-generation", name: "Fast Generation", description: "Low latency, limited detail. Good for quick previews." },
+  { id: "cinematic-generation", name: "Cinematic Generation", description: "High quality, slower. Best for final renders." },
+  { id: "stylized-animation", name: "Stylized Animation", description: "Artistic rendering for unique visual styles." },
+];
+
 const formSchema = z.object({
   prompt: z.string().min(10, {
     message: "Prompt must be at least 10 characters.",
   }),
+  model: z.string(),
   aspectRatio: z.string(),
   resolution: z.string(),
   format: z.string(),
@@ -38,6 +46,7 @@ export function VideoGeneratorClient() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
+      model: models[0].id,
       aspectRatio: "16:9",
       resolution: "1080p",
       format: "MP4",
@@ -65,6 +74,8 @@ export function VideoGeneratorClient() {
       setIsLoading(false);
     }
   }
+
+  const selectedModelDescription = models.find(m => m.id === form.watch("model"))?.description;
 
   return (
     <div className="space-y-8">
@@ -95,7 +106,37 @@ export function VideoGeneratorClient() {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {models.length > 1 && (
+                   <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Select AI Model</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a model" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {models.map(model => (
+                              <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedModelDescription && (
+                           <FormDescription>
+                            {selectedModelDescription}
+                          </FormDescription>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                  <FormField
                   control={form.control}
                   name="aspectRatio"
@@ -120,6 +161,8 @@ export function VideoGeneratorClient() {
                     </FormItem>
                   )}
                 />
+              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <FormField
                   control={form.control}
                   name="resolution"
