@@ -27,7 +27,7 @@ const GenerateMapAnimationOutputSchema = z.object({
   videoDataUri: z
     .string()
     .describe(
-      'The generated map animation video as a data URI (video/mp4) that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'      
+      'The generated map animation video as a data URI (video/mp4) that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
     ),
 });
 export type GenerateMapAnimationOutput = z.infer<
@@ -49,9 +49,13 @@ const generateMapAnimationFlow = ai.defineFlow(
   async input => {
     let { operation } = await ai.generate({
       model: googleAI.model('veo-2.0-generate-001'),
-      prompt: `Generate a map animation video based on the following details: ${input.locationDetails}`,
+      prompt: `Create a visually appealing animated map video that illustrates a route.
+Route details: "${input.locationDetails}".
+The animation must draw a clear line or path on a stylized map, starting from the origin and ending at the destination.
+Prominently display the names of the start and end locations on the map.
+The style should be clean, modern, and engaging, suitable for a travel vlog or presentation.`,
       config: {
-        durationSeconds: 5,
+        durationSeconds: 8,
         aspectRatio: '16:9',
       },
     });

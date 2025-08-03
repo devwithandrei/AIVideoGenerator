@@ -3,35 +3,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clapperboard, Gem, ImageIcon, Map, Rocket } from "lucide-react"
 import Image from "next/image"
-
-const Logo = () => (
-  <div className="flex items-center gap-2">
-    <Gem className="h-8 w-8 text-primary" />
-    <span className="text-xl font-bold font-headline">MediaForge AI</span>
-  </div>
-);
+import { Header } from "@/components/header"
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center bg-background/95 backdrop-blur-sm sticky top-0 z-50">
-        <Link href="#" className="flex items-center justify-center" prefetch={false}>
-          <Logo />
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-            Features
-          </Link>
-          <Link href="/dashboard/billing" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
-            Pricing
-          </Link>
-          <Button asChild style={{backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))'}}>
-            <Link href="/dashboard" prefetch={false}>
-              Get Started
-            </Link>
-          </Button>
-        </nav>
-      </header>
+      <Header />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container px-4 md:px-6">

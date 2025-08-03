@@ -15,16 +15,40 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Video } from "lucide-react";
 import { generateVideoFromText } from "@/ai/flows/generate-video-from-text";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const models = [
-  { id: "fast-generation", name: "Fast Generation", description: "Low latency, limited detail. Good for quick previews." },
-  { id: "cinematic-generation", name: "Cinematic Generation", description: "High quality, slower. Best for final renders." },
-  { id: "stylized-animation", name: "Stylized Animation", description: "Artistic rendering for unique visual styles." },
+  {
+    id: "fast-generation",
+    name: "Fast Generation",
+    description: "Low latency, limited detail. Good for quick previews.",
+  },
+  {
+    id: "cinematic-generation",
+    name: "Cinematic Generation",
+    description: "High quality, slower. Best for final renders.",
+  },
+  {
+    id: "stylized-animation",
+    name: "Stylized Animation",
+    description: "Artistic rendering for unique visual styles.",
+  },
 ];
 
 const formSchema = z.object({
@@ -75,18 +99,25 @@ export function VideoGeneratorClient() {
     }
   }
 
-  const selectedModelDescription = models.find(m => m.id === form.watch("model"))?.description;
+  const selectedModelDescription = models.find(
+    (m) => m.id === form.watch("model")
+  )?.description;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Describe Your Video</CardTitle>
-          <CardDescription>Fill in the details below to generate your video.</CardDescription>
+          <CardDescription>
+            Fill in the details below to generate your video.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
               <FormField
                 control={form.control}
                 name="prompt"
@@ -107,27 +138,32 @@ export function VideoGeneratorClient() {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 {models.length > 1 && (
-                   <FormField
+                {models.length > 1 && (
+                  <FormField
                     control={form.control}
                     name="model"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Select AI Model</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a model" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {models.map(model => (
-                              <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                            {models.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>
+                                {model.name}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         {selectedModelDescription && (
-                           <FormDescription>
+                          <FormDescription>
                             {selectedModelDescription}
                           </FormDescription>
                         )}
@@ -137,23 +173,28 @@ export function VideoGeneratorClient() {
                   />
                 )}
 
-                 <FormField
+                <FormField
                   control={form.control}
                   name="aspectRatio"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Aspect Ratio</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select an aspect ratio" />
-                          </Trigger>
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="9:16">Portrait (9:16)</SelectItem>
                           <SelectItem value="16:9">Landscape (16:9)</SelectItem>
                           <SelectItem value="1:1">Square (1:1)</SelectItem>
-                          <SelectItem value="21:9">Widescreen Cinematic (21:9)</SelectItem>
+                          <SelectItem value="21:9">
+                            Widescreen Cinematic (21:9)
+                          </SelectItem>
                           <SelectItem value="32:9">Ultra-Wide (32:9)</SelectItem>
                         </SelectContent>
                       </Select>
@@ -162,22 +203,28 @@ export function VideoGeneratorClient() {
                   )}
                 />
               </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <FormField
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
                   control={form.control}
                   name="resolution"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Resolution</FormLabel>
-                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a resolution" />
-                          </Trigger>
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="720p">720p (1280x720)</SelectItem>
-                          <SelectItem value="1080p">1080p (1920x1080)</SelectItem>
+                          <SelectItem value="1080p">
+                            1080p (1920x1080)
+                          </SelectItem>
                           <SelectItem value="4K">4K (3840x2160)</SelectItem>
                         </SelectContent>
                       </Select>
@@ -186,17 +233,20 @@ export function VideoGeneratorClient() {
                   )}
                 />
 
-                 <FormField
+                <FormField
                   control={form.control}
                   name="format"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Video Format</FormLabel>
-                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a format" />
-                          </Trigger>
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="MP4">MP4</SelectItem>
@@ -210,21 +260,33 @@ export function VideoGeneratorClient() {
                 />
               </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full" style={{backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))'}}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full"
+                style={{
+                  backgroundColor: "hsl(var(--accent))",
+                  color: "hsl(var(--accent-foreground))",
+                }}
+              >
+                {isLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Generate Video
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
-      
+
       <Card className="flex items-center justify-center aspect-video bg-card/50 border-dashed">
         <CardContent className="p-0 w-full h-full flex items-center justify-center">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="text-muted-foreground">Generating your video... <br /> This can take up to a minute.</p>
+              <p className="text-muted-foreground">
+                Generating your video... <br /> This can take up to a minute.
+              </p>
             </div>
           ) : videoUrl ? (
             <video
