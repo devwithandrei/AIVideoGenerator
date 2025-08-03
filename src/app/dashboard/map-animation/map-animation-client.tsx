@@ -13,6 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +30,9 @@ const formSchema = z.object({
   locationDetails: z.string().min(5, {
     message: "Location details must be at least 5 characters.",
   }),
+  mapStyle: z.string(),
+  lineColor: z.string(),
+  duration: z.string(),
 });
 
 export function MapAnimationClient() {
@@ -34,6 +44,9 @@ export function MapAnimationClient() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       locationDetails: "",
+      mapStyle: "roadmap",
+      lineColor: "red",
+      duration: "5",
     },
   });
 
@@ -41,7 +54,7 @@ export function MapAnimationClient() {
     setIsLoading(true);
     setVideoUrl("");
     try {
-      const result = await generateMapAnimation({ locationDetails: values.locationDetails });
+      const result = await generateMapAnimation(values);
       setVideoUrl(result.videoDataUri);
       toast({
         title: "Success!",
@@ -78,6 +91,74 @@ export function MapAnimationClient() {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="mapStyle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Map Style</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a map style" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="roadmap">Roadmap</SelectItem>
+                        <SelectItem value="satellite">Satellite</SelectItem>
+                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                        <SelectItem value="terrain">Terrain</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lineColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Line Color</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a line color" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="red">Red</SelectItem>
+                        <SelectItem value="blue">Blue</SelectItem>
+                        <SelectItem value="green">Green</SelectItem>
+                        <SelectItem value="yellow">Yellow</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (seconds)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a duration" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="15">15</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="30">30</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />

@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Generates an image from a text prompt using the Gemini 2.0 Flash experimental image generation model.
+ * @fileOverview Generates an image from a text prompt using the Imagen 2 model.
  *
  * - generateImageFromText - A function that handles the image generation process.
  * - GenerateImageFromTextInput - The input type for the generateImageFromText function.
@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import {vertexAI} from '@genkit-ai/vertexai';
 
 const GenerateImageFromTextInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the image from.'),
@@ -32,18 +33,38 @@ const generateImageFromTextFlow = ai.defineFlow(
     outputSchema: GenerateImageFromTextOutputSchema,
   },
   async (input) => {
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
+    const imageResponse = await ai.generate({
+      model: vertexAI.model('imagen2'),
       prompt: input.prompt,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
     });
 
-    if (!media.url) {
+    const imagePart = imageResponse.candidates[0]?.content.find(
+      (part) => !!part.media
+    );
+
+    if (!imagePart?.media?.url) {
       throw new Error('No image was generated.');
     }
+    const media = imagePart.media;
 
-    return { imageDataUri: media.url };
+    // Download the image and convert to a data URI.
+    const fetch = (await import('node-fetch')).default;
+    const imageDownloadResponse = await fetch(
+        `${media.url}&key=${process.env.GEMINI_API_KEY}`
+    );
+    if (
+      !imageDownloadResponse ||
+      imageDownloadResponse.status !== 200 ||
+      !imageDownloadResponse.body
+    ) {
+      throw new Error('Failed to fetch image');
+    }
+
+    const buffer = await imageDownloadResponse.arrayBuffer();
+    const imageBase64 = Buffer.from(buffer).toString('base64');
+    const mimeType = media.contentType || 'image/png';
+    const imageDataUri = `data:${mimeType};base64,${imageBase64}`;
+
+    return { imageDataUri };
   }
 );
