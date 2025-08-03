@@ -1,21 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Film, Image as ImageIcon, Map } from "lucide-react";
+import { PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 const stats = [
-  { title: "Projects Created", value: "12", description: "Total projects generated" },
-  { title: "Credits Remaining", value: "850", description: "Your available credits" },
-  { title: "Current Plan", value: "Pro", description: "Upgraded on 2024-07-01" },
-];
-
-const recentProjects = [
-  { name: "Summer Trip Recap", type: "Video", date: "2024-07-28", icon: <Film className="h-5 w-5 text-muted-foreground" /> },
-  { name: "NYC Skyline", type: "Image", date: "2024-07-27", icon: <ImageIcon className="h-5 w-5 text-muted-foreground" /> },
-  { name: "European Roadtrip", type: "Map Animation", date: "2024-07-25", icon: <Map className="h-5 w-5 text-muted-foreground" /> },
-  { name: "Product Hunt Launch Video", type: "Video", date: "2024-07-22", icon: <Film className="h-5 w-5 text-muted-foreground" /> },
-  { name: "Futuristic Cityscape", type: "Image", date: "2024-07-21", icon: <ImageIcon className="h-5 w-5 text-muted-foreground" /> },
+  { title: "Projects Created", value: "0", description: "Get started below!" },
+  { title: "Credits Remaining", value: "100", description: "Based on your current plan" },
+  { title: "Current Plan", value: "Free", description: "Upgrade for more features" },
 ];
 
 export default function DashboardPage() {
@@ -41,42 +32,22 @@ export default function DashboardPage() {
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold tracking-tight font-headline">Recent Projects</h2>
+        <h2 className="text-2xl font-bold tracking-tight font-headline">Get Started</h2>
         <Card className="mt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden md:table-cell">Type</TableHead>
-                <TableHead className="hidden md:table-cell">Date</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentProjects.map((project) => (
-                <TableRow key={project.name}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      {project.icon}
-                      <span className="font-medium">{project.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge variant="outline">{project.type}</Badge>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{project.date}</TableCell>
-                  <TableCell>
-                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <CardContent className="p-6 text-center">
+            <div className="flex flex-col items-center justify-center h-full gap-4">
+               <div className="bg-primary/10 p-4 rounded-full">
+                <PlusCircle className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mt-2">Create Your First Project</h3>
+              <p className="text-muted-foreground max-w-md">
+                You haven't created any media yet. Choose one of the AI tools from the sidebar to generate your first video, image, or map animation.
+              </p>
+              <Button asChild className="mt-4" style={{backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))'}}>
+                <Link href="/dashboard/video-generator">Create New Video</Link>
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
