@@ -1,5 +1,5 @@
 import type {Metadata} from 'next';
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
