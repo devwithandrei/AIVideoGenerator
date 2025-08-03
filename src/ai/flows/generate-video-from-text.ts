@@ -16,6 +16,9 @@ import { Readable } from 'stream';
 
 const GenerateVideoFromTextInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the video from.'),
+  aspectRatio: z.string().describe('The aspect ratio of the video.'),
+  resolution: z.string().describe('The resolution of the video.'),
+  format: z.string().describe('The file format of the video.'),
 });
 export type GenerateVideoFromTextInput = z.infer<typeof GenerateVideoFromTextInputSchema>;
 
@@ -40,7 +43,9 @@ const generateVideoFromTextFlow = ai.defineFlow(
       prompt: input.prompt,
       config: {
         durationSeconds: 5,
-        aspectRatio: '16:9',
+        aspectRatio: input.aspectRatio,
+        // resolution and format are not directly supported by the model config in this way,
+        // but are captured in the flow for potential post-processing steps.
       },
     });
 
