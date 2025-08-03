@@ -60,7 +60,7 @@ const generateMapAnimationFlow = ai.defineFlow(
     if (!mapImage.url) {
       throw new Error('Failed to generate the base map image.');
     }
-
+    
     // Step 2: Use the generated map to create the animated video.
     let {operation} = await ai.generate({
       model: googleAI.model('veo-2.0-generate-001'),
