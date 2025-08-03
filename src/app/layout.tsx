@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css';
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
+import { dark } from '@clerk/themes';
 
 export const metadata: Metadata = {
   title: 'MediaForge AI',
@@ -15,7 +16,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{
+      baseTheme: dark
+    }}>
       <html lang="en" className="dark">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,3 +31,5 @@ export default function RootLayout({
         </body>
       </html>
     </ClerkProvider>
+  );
+}
