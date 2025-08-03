@@ -19,9 +19,6 @@ export default function DashboardLayout({
                  <Gem className="h-8 w-8 text-primary" />
                  <h1 className="text-xl font-bold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">MediaForge AI</h1>
                </Link>
-                <SidebarTrigger className="ml-auto hidden md:flex">
-                  <PanelLeft />
-                </SidebarTrigger>
             </div>
             <DashboardNav />
           </div>
@@ -29,7 +26,7 @@ export default function DashboardLayout({
         <SidebarInset>
           <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
             <div className="flex items-center h-14 px-4 sm:px-8">
-              <SidebarTrigger className="mr-4 md:hidden" />
+              <SidebarTrigger className="mr-4" />
               <div className="flex items-center w-full justify-end">
                 {/* UserNav removed since authentication is disabled */}
               </div>
