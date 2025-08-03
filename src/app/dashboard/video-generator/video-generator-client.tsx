@@ -147,7 +147,7 @@ export function VideoGeneratorClient() {
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select an aspect ratio" />
-                          </SelectTrigger>
+                          </Trigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="9:16">Portrait (9:16)</SelectItem>
@@ -173,7 +173,7 @@ export function VideoGeneratorClient() {
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a resolution" />
-                          </SelectTrigger>
+                          </Trigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="720p">720p (1280x720)</SelectItem>
