@@ -11,7 +11,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex justify-center">
-         <UserProfile path="/dashboard/settings" />
+         <UserProfile path="/dashboard/settings" routing="path" />
       </div>
     </div>
   );
