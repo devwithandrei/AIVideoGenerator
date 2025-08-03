@@ -11,7 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CreditCard, LogOut, Settings, User } from "lucide-react";
+import { CreditCard, LogOut, Settings, User, LifeBuoy } from "lucide-react";
+import Link from "next/link";
 
 export function UserNav() {
   return (
@@ -27,31 +28,44 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">User</p>
+            <p className="text-sm font-medium leading-none">John Doe</p>
             <p className="text-xs leading-none text-muted-foreground">
-              user@example.com
+              john.doe@example.com
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+          <DropdownMenuItem asChild>
+             <Link href="/dashboard/settings">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
+          <DropdownMenuItem asChild>
+             <Link href="/dashboard/billing">
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span>Billing</span>
+             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+          <DropdownMenuItem asChild>
+             <Link href="/dashboard/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+         <DropdownMenuItem>
+            <LifeBuoy className="mr-2 h-4 w-4" />
+            <span>Support</span>
+          </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+           <Link href="/sign-in">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
