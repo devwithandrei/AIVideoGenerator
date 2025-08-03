@@ -14,9 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Video } from "lucide-react";
 import { generateVideoFromText } from "@/ai/flows/generate-video-from-text";
 
 const formSchema = z.object({
@@ -60,22 +60,24 @@ export function VideoGeneratorClient() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="space-y-8">
       <Card>
-        <CardContent className="p-6">
+        <CardHeader>
+          <CardTitle>Describe Your Video</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="prompt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Video Prompt</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="e.g., A cinematic shot of a futuristic city with flying cars at sunset"
                         className="resize-none"
-                        rows={8}
+                        rows={5}
                         {...field}
                       />
                     </FormControl>
@@ -93,7 +95,7 @@ export function VideoGeneratorClient() {
       </Card>
       
       <Card className="flex items-center justify-center aspect-video bg-card/50 border-dashed">
-        <CardContent className="p-0 w-full h-full">
+        <CardContent className="p-0 w-full h-full flex items-center justify-center">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -109,6 +111,7 @@ export function VideoGeneratorClient() {
             </video>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+              <Video className="h-16 w-16 mb-4" />
               <p>Your generated video will appear here.</p>
             </div>
           )}
