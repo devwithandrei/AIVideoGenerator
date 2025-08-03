@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { UserNav } from "@/components/user-nav";
@@ -14,9 +15,11 @@ export default function DashboardLayout({
       <div className="min-h-screen">
         <Sidebar>
           <div className="flex flex-col h-full">
-            <div className="p-4 flex items-center gap-2">
-               <Gem className="h-8 w-8 text-primary" />
-               <h1 className="text-xl font-bold font-headline text-foreground group-data-[collapsible=icon]:hidden">MediaForge AI</h1>
+             <div className="p-4 flex items-center justify-between">
+               <Link href="/" className="flex items-center gap-2" prefetch={false}>
+                 <Gem className="h-8 w-8 text-primary" />
+                 <h1 className="text-xl font-bold font-headline text-foreground group-data-[collapsible=icon]:hidden">MediaForge AI</h1>
+               </Link>
             </div>
             <DashboardNav />
           </div>
@@ -24,9 +27,7 @@ export default function DashboardLayout({
         <SidebarInset>
           <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
             <div className="flex items-center h-14 px-4 sm:px-8">
-              <div className="md:hidden">
-                 <SidebarTrigger />
-              </div>
+              <SidebarTrigger className="mr-4" />
               <div className="flex items-center w-full justify-end">
                 <UserNav />
               </div>
