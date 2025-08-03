@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { UserNav } from "@/components/user-nav";
 import { Gem } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardLayout({
   children,
@@ -29,7 +29,9 @@ export default function DashboardLayout({
             <div className="flex items-center h-14 px-4 sm:px-8">
               <SidebarTrigger className="mr-4" />
               <div className="flex items-center w-full justify-end">
-                <UserNav />
+                <Button asChild>
+                  <Link href="/sign-in">Sign In</Link>
+                </Button>
               </div>
             </div>
           </header>

@@ -13,28 +13,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CreditCard, LogOut, Settings, User, LifeBuoy } from "lucide-react";
 import Link from "next/link";
-import { useClerk, useUser } from "@clerk/nextjs";
 
 export function UserNav() {
-  const { user } = useUser();
-  const { signOut } = useClerk();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
-            <AvatarFallback>{user?.fullName?.charAt(0) || "U"}</AvatarFallback>
+            <AvatarImage src="" alt="User" />
+            <AvatarFallback>U</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+            <p className="text-sm font-medium leading-none">Guest User</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user?.primaryEmailAddress?.emailAddress}
+              guest@example.com
             </p>
           </div>
         </DropdownMenuLabel>
@@ -65,7 +62,7 @@ export function UserNav() {
             <span>Support</span>
           </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut({ redirectUrl: '/' })}>
+        <DropdownMenuItem>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
