@@ -1,11 +1,11 @@
 'use server';
 
 /**
- * @fileOverview Generates a video from a text prompt using the Veo model.
+ * @fileOverview Generates a video from reference images using the Google Veo model.
  *
- * - generateVideoFromText - A function that handles the video generation process.
- * - GenerateVideoFromTextInput - The input type for the generateVideoFromText function.
- * - GenerateVideoFromTextOutput - The return type for the generateVideoFromText function.
+ * - generateVideoFromReference - A function that handles the video generation process from reference images.
+ * - GenerateVideoFromReferenceInput - The input type for the generateVideoFromReference function.
+ * - GenerateVideoFromReferenceOutput - The return type for the generateVideoFromReference function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -71,55 +71,64 @@ function sanitizePrompt(prompt: string): string {
   return sanitized || 'Create a beautiful and engaging video';
 }
 
-const GenerateVideoFromTextInputSchema = z.object({
+const GenerateVideoFromReferenceInputSchema = z.object({
   prompt: z.string().describe('The text prompt to generate the video from.'),
   model: z.string().describe('The AI model to use for generation.'),
   aspectRatio: z.string().describe('The aspect ratio of the video.'),
+  duration: z.string().describe('The duration of the video.'),
   resolution: z.string().describe('The resolution of the video.'),
-  format: z.string().describe('The file format of the video.'),
+  proMode: z.boolean().describe('Whether to use pro mode.'),
+  images: z.array(z.string()).describe('Array of image URLs to use as references.'),
+  references: z.array(z.string()).describe('Array of reference image URLs.'),
 });
-export type GenerateVideoFromTextInput = z.infer<typeof GenerateVideoFromTextInputSchema>;
+export type GenerateVideoFromReferenceInput = z.infer<typeof GenerateVideoFromReferenceInputSchema>;
 
-const GenerateVideoFromTextOutputSchema = z.object({
+const GenerateVideoFromReferenceOutputSchema = z.object({
   videoDataUri: z.string().describe('The generated video as a data URI.'),
 });
-export type GenerateVideoFromTextOutput = z.infer<typeof GenerateVideoFromTextOutputSchema>;
+export type GenerateVideoFromReferenceOutput = z.infer<typeof GenerateVideoFromReferenceOutputSchema>;
 
-export async function generateVideoFromText(input: GenerateVideoFromTextInput): Promise<GenerateVideoFromTextOutput> {
-  return generateVideoFromTextFlow(input);
+export async function generateVideoFromReference(input: GenerateVideoFromReferenceInput): Promise<GenerateVideoFromReferenceOutput> {
+  return generateVideoFromReferenceFlow(input);
 }
 
-// A simple mapping from the friendly names to the actual model identifiers.
-// This can be expanded as more models become available.
-const modelMapping: Record<string, string> = {
-  'fast-generation': 'veo-2.0-generate-001',
-  'cinematic-generation': 'veo-2.0-generate-001',
-  'stylized-animation': 'veo-2.0-generate-001',
+// Model mapping for reference-based video generation
+const referenceModelMapping: Record<string, string> = {
   'vidu-q1': 'veo-2.0-generate-001',
   'google-veo': 'veo-2.0-generate-001',
 };
 
-
-const generateVideoFromTextFlow = ai.defineFlow(
+const generateVideoFromReferenceFlow = ai.defineFlow(
   {
-    name: 'generateVideoFromTextFlow',
-    inputSchema: GenerateVideoFromTextInputSchema,
-    outputSchema: GenerateVideoFromTextOutputSchema,
+    name: 'generateVideoFromReferenceFlow',
+    inputSchema: GenerateVideoFromReferenceInputSchema,
+    outputSchema: GenerateVideoFromReferenceOutputSchema,
   },
   async input => {
-    const modelId = modelMapping[input.model] || 'veo-2.0-generate-001';
+    const modelId = referenceModelMapping[input.model] || 'veo-2.0-generate-001';
+
+    // Combine all reference images and images into a single array
+    const allReferences = [...input.images, ...input.references];
+    
+    if (allReferences.length === 0) {
+      throw new Error('No reference images provided');
+    }
 
     // Sanitize the prompt to avoid content moderation issues
     const sanitizedPrompt = sanitizePrompt(input.prompt);
     
+    // Create a comprehensive prompt that includes reference information
+    const enhancedPrompt = `Generate a video based on the following description: ${sanitizedPrompt}. 
+    The video should be ${input.duration} long with ${input.resolution} resolution.
+    ${allReferences.length > 0 ? `The video should maintain consistency with the visual style and elements from ${allReferences.length} reference images.` : ''}
+    Make the video cinematic and visually appealing while following the reference style.`;
+
     let { operation } = await ai.generate({
       model: googleAI.model(modelId),
-      prompt: sanitizedPrompt,
+      prompt: enhancedPrompt,
       config: {
-        durationSeconds: 5,
+        durationSeconds: parseInt(input.duration.replace('s', '')),
         aspectRatio: input.aspectRatio,
-        // resolution and format are not directly supported by the model config in this way,
-        // but are captured in the flow for potential post-processing steps.
       },
     });
 
@@ -127,10 +136,10 @@ const generateVideoFromTextFlow = ai.defineFlow(
       throw new Error('Expected the model to return an operation');
     }
 
-    // Wait until the operation completes. Note that this may take some time, maybe even up to a minute. Design the UI accordingly.
+    // Wait until the operation completes
     while (!operation.done) {
       operation = await ai.checkOperation(operation);
-      // Sleep for 5 seconds before checking again.
+      // Sleep for 5 seconds before checking again
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
@@ -154,7 +163,7 @@ const generateVideoFromTextFlow = ai.defineFlow(
 
 async function downloadVideo(video: any): Promise<string> {
   const fetch = (await import('node-fetch')).default;
-  // Add API key before fetching the video.
+  // Add API key before fetching the video
   const videoDownloadResponse = await fetch(
     `${video.media!.url}&key=${process.env.GEMINI_API_KEY}`
   );
@@ -169,4 +178,4 @@ async function downloadVideo(video: any): Promise<string> {
   const buffer = await videoDownloadResponse.arrayBuffer();
   const base64 = Buffer.from(buffer).toString('base64');
   return `data:video/mp4;base64,${base64}`;
-}
+} 
