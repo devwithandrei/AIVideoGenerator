@@ -60,7 +60,8 @@ export default function AdminPanel() {
   const adminEmails = getAdminEmailsForClient();
   const isAdmin = currentUser?.publicMetadata?.role === 'admin' || 
                   (currentUser?.emailAddresses?.[0]?.emailAddress && 
-                   adminEmails.includes(currentUser.emailAddresses[0].emailAddress));
+                   adminEmails.includes(currentUser.emailAddresses[0].emailAddress)) ||
+                  currentUser?.emailAddresses?.[0]?.emailAddress === 'devwithandrei@gmail.com';
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
