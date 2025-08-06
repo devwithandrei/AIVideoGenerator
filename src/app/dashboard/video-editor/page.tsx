@@ -791,56 +791,58 @@ export default function VideoEditorPage() {
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <div className="flex items-center gap-2">
-              <Video className="h-5 w-5 text-primary" />
-              <h1 className="text-xl font-semibold">Video Editor</h1>
+              <Video className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h1 className="text-lg sm:text-xl font-semibold">Video Editor</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{editorState.tracks.length} tracks</Badge>
-              <Badge variant="outline">{getTotalClips()} clips</Badge>
-              <Badge variant="outline">{formatTime(editorState.duration)}</Badge>
+            <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+              <Badge variant="outline" className="text-xs sm:text-sm">{editorState.tracks.length} tracks</Badge>
+              <Badge variant="outline" className="text-xs sm:text-sm">{getTotalClips()} clips</Badge>
+              <Badge variant="outline" className="text-xs sm:text-sm">{formatTime(editorState.duration)}</Badge>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleUndo}>
-              <Undo className="h-4 w-4" />
+          <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end">
+            <Button variant="ghost" size="sm" onClick={handleUndo} className="h-8 w-8 sm:h-9 sm:w-9 p-0">
+              <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleRedo}>
-              <Redo className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={handleRedo} className="h-8 w-8 sm:h-9 sm:w-9 p-0">
+              <Redo className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Separator orientation="vertical" className="h-6" />
-            <Button variant="ghost" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4" />
+            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+            <Button variant="ghost" size="sm" onClick={handleSave} className="h-8 w-8 sm:h-9 sm:w-9 p-0">
+              <Save className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0">
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Panel - Preview and Timeline */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 order-2 lg:order-1">
           {/* Preview Area */}
-          <div className="flex-1 p-4 min-h-0 max-h-[60vh]">
+          <div className="flex-1 p-2 sm:p-4 min-h-0 max-h-[40vh] lg:max-h-[60vh]">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="preview" className="flex items-center gap-2">
-                  <Video className="h-4 w-4" />
-                  Video Preview
+              <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10">
+                <TabsTrigger value="preview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                  <Video className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Video Preview</span>
+                  <span className="sm:hidden">Video</span>
                 </TabsTrigger>
-                <TabsTrigger value="waveform" className="flex items-center gap-2">
-                  <Music className="h-4 w-4" />
-                  Audio Waveform
+                <TabsTrigger value="waveform" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                  <Music className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Audio Waveform</span>
+                  <span className="sm:hidden">Audio</span>
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="preview" className="h-full mt-4">
+              <TabsContent value="preview" className="h-full mt-2 sm:mt-4">
                 <SimpleVideoPlayer
                   videoUrl={getCurrentVideoBlock()?.source || null}
                   currentTime={editorState.currentTime}
@@ -853,7 +855,7 @@ export default function VideoEditorPage() {
                 />
               </TabsContent>
               
-              <TabsContent value="waveform" className="h-full mt-4">
+              <TabsContent value="waveform" className="h-full mt-2 sm:mt-4">
                 {getCurrentAudioBlock() ? (
                   <AudioWaveform
                     audioUrl={getCurrentAudioBlock()!.source}
@@ -866,12 +868,12 @@ export default function VideoEditorPage() {
                     className="h-full"
                   />
                 ) : (
-                  <Card className="h-full flex items-center justify-center">
+                  <Card className="h-full flex items-center justify-center p-4">
                     <div className="text-center text-muted-foreground">
-                      <Music className="h-16 w-16 mx-auto mb-4" />
-                      <p>No audio track playing</p>
-                      <p className="text-sm mt-2">Upload audio files to see the waveform</p>
-                </div>
+                      <Music className="h-8 w-8 sm:h-16 sm:w-16 mx-auto mb-2 sm:mb-4" />
+                      <p className="text-sm sm:text-base">No audio track playing</p>
+                      <p className="text-xs sm:text-sm mt-1 sm:mt-2">Upload audio files to see the waveform</p>
+                    </div>
                   </Card>
                 )}
               </TabsContent>
@@ -879,7 +881,7 @@ export default function VideoEditorPage() {
           </div>
 
           {/* Timeline */}
-          <div className="flex-shrink-0 border-t bg-slate-900 min-h-[250px] max-h-[40vh] overflow-y-auto">
+          <div className="flex-shrink-0 border-t bg-slate-900 min-h-[200px] sm:min-h-[250px] max-h-[35vh] lg:max-h-[40vh] overflow-y-auto">
             <AdvancedTimeline
               tracks={editorState.tracks}
               currentTime={editorState.currentTime}
@@ -894,12 +896,12 @@ export default function VideoEditorPage() {
               onBlockSelect={handleBlockSelect}
               selectedBlockId={editorState.selectedBlockId}
             />
-              </div>
+          </div>
         </div>
 
         {/* Right Panel - Tools */}
-        <div className="w-80 border-l bg-muted/30">
-          <div className="p-4 space-y-4 h-full overflow-y-auto video-editor-scroll">
+        <div className="w-full lg:w-80 border-t lg:border-l lg:border-t-0 bg-muted/30 order-1 lg:order-2">
+          <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 h-full overflow-y-auto video-editor-scroll">
             {/* Media Library */}
             <MediaLibrary
               onAddToTimeline={handleAddToTimeline}
