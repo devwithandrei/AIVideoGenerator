@@ -873,7 +873,7 @@ export default function VideoEditorPage() {
                       <Music className="h-8 w-8 sm:h-16 sm:w-16 mx-auto mb-2 sm:mb-4" />
                       <p className="text-sm sm:text-base">No audio track playing</p>
                       <p className="text-xs sm:text-sm mt-1 sm:mt-2">Upload audio files to see the waveform</p>
-                    </div>
+                </div>
                   </Card>
                 )}
               </TabsContent>
@@ -896,7 +896,7 @@ export default function VideoEditorPage() {
               onBlockSelect={handleBlockSelect}
               selectedBlockId={editorState.selectedBlockId}
             />
-          </div>
+              </div>
         </div>
 
         {/* Right Panel - Tools */}
