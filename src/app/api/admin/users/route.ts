@@ -82,41 +82,7 @@ export async function GET() {
     });
     console.log('Transformed users:', transformedUsers.length);
 
-    // Add a test admin user to demonstrate admin functionality
-    const testAdminUser = {
-      id: 'test_admin_1',
-      email: 'admin@mediaforge.ai',
-      firstName: 'Admin',
-      lastName: 'User',
-      imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-      lastSignInAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      isActive: true,
-      role: 'admin',
-      banned: false,
-      emailVerified: true,
-    };
-
-    // Add a test regular user
-    const testRegularUser = {
-      id: 'test_user_1',
-      email: 'user@mediaforge.ai',
-      firstName: 'Regular',
-      lastName: 'User',
-      imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-      lastSignInAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-      isActive: true,
-      role: 'user',
-      banned: false,
-      emailVerified: true,
-    };
-
-    // Combine real users with test users
-    const allUsers = [...transformedUsers, testAdminUser, testRegularUser];
-    console.log('Total users (including test users):', allUsers.length);
-
-    return NextResponse.json({ users: allUsers });
+    return NextResponse.json({ users: transformedUsers });
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
