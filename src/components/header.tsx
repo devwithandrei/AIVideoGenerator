@@ -48,7 +48,7 @@ export function Header() {
                 <Link href="/#features" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
                     Features
                 </Link>
-                <Link href="/dashboard/billing" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
+                <Link href="/pricing" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
                     Pricing
                 </Link>
                 
