@@ -55,7 +55,7 @@ const plans = [
       "Custom video durations",
       "Batch processing"
     ],
-    popular: true,
+    popular: false,
     icon: Crown,
     color: "border-purple-500",
     bgColor: "bg-purple-500/10",
@@ -149,16 +149,8 @@ export default function PricingPage() {
               return (
                 <Card 
                   key={plan.name}
-                  className={`relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-                    plan.popular ? 'ring-2 ring-purple-500 shadow-lg' : ''
-                  }`}
+                  className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 >
-                  {plan.popular && (
-                    <div className="absolute top-0 left-0 right-0 bg-purple-500 text-white text-center py-2 text-sm font-medium">
-                      Most Popular
-                    </div>
-                  )}
-                  
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -178,8 +170,8 @@ export default function PricingPage() {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
+                  <CardContent className="space-y-4 flex flex-col h-full">
+                    <div className="space-y-3 flex-grow">
                       {plan.features.map((feature, featureIndex) => (
                         <div key={featureIndex} className="flex items-center space-x-2">
                           <Check className="h-4 w-4 text-green-500" />
@@ -189,11 +181,7 @@ export default function PricingPage() {
                     </div>
                     
                     <Button 
-                      className={`w-full mt-6 ${
-                        plan.popular 
-                          ? 'bg-purple-600 hover:bg-purple-700' 
-                          : 'bg-primary hover:bg-primary/90'
-                      }`}
+                      className="w-full mt-auto"
                       size="lg"
                     >
                       {plan.name === "Business Plan" ? (
