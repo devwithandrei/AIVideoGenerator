@@ -94,8 +94,7 @@ export async function generateVideoFromImage(input: GenerateVideoFromImageInput)
 
 // Model mapping for image-to-video generation
 const imageModelMapping: Record<string, string> = {
-  'vidu-q1': 'veo-2.0-generate-001',
-  'google-veo': 'veo-2.0-generate-001',
+  'veo2': 'veo-2.0-generate-001',
 };
 
 const generateVideoFromImageFlow = ai.defineFlow(

@@ -128,10 +128,10 @@ export function SimpleVideoPlayer({
 
   if (!videoUrl) {
     return (
-      <div className={cn("aspect-video w-full border-dashed border-2 border-gray-300 flex items-center justify-center bg-gray-100 rounded-lg", className)}>
-        <div className="flex flex-col items-center justify-center text-center text-gray-500">
-          <div className="h-16 w-16 mb-4 rounded-lg bg-gray-200 flex items-center justify-center">
-            <Play className="h-8 w-8" />
+      <div className={cn("aspect-video w-full border-dashed border-2 border-slate-600 flex items-center justify-center bg-slate-800/50 rounded-lg", className)}>
+        <div className="flex flex-col items-center justify-center text-center text-muted-foreground">
+          <div className="h-16 w-16 mb-4 rounded-lg bg-slate-700 flex items-center justify-center">
+            <Play className="h-8 w-8 text-slate-400" />
           </div>
           <p className="text-lg font-medium">Upload a video to start editing</p>
           <p className="text-sm mt-2">Drag and drop video files or click upload in the media library</p>

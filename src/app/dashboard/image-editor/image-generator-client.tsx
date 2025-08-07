@@ -24,7 +24,7 @@ const formSchema = z.object({
 export function ImageGeneratorClient() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState("https://placehold.co/1280x720.png");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,7 +84,7 @@ export function ImageGeneratorClient() {
   };
 
   const handleDownloadClick = () => {
-    if (!imageUrl || imageUrl.startsWith("https://placehold.co")) {
+    if (!imageUrl) {
        toast({
         title: "No Image to Download",
         description: "Please generate or upload an image first.",
@@ -92,22 +92,35 @@ export function ImageGeneratorClient() {
       });
       return;
     }
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = uploadedFileName || "generated-image.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-     toast({
+
+    try {
+      // Simple download approach - works with data URIs
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = uploadedFileName || `generated-image-${Date.now()}.png`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
         title: "Download Started",
         description: "Your image is being downloaded.",
       });
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download image. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-8">
       <div className="space-y-4">
-        <Card className="aspect-video w-full border-dashed flex items-center justify-center bg-muted/50">
+        <Card className="aspect-video w-full border-dashed flex items-center justify-center bg-slate-800/50 border-slate-600">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -123,7 +136,7 @@ export function ImageGeneratorClient() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-              <ImageIcon className="h-16 w-16 mb-4" />
+              <ImageIcon className="h-16 w-16 mb-4 text-slate-400" />
               <p>Your generated image will appear here.</p>
             </div>
           )}

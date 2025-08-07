@@ -99,10 +99,10 @@ export function VideoPreview({
 
   if (!videoUrl) {
     return (
-      <Card className={cn("aspect-video w-full border-dashed flex items-center justify-center bg-muted/50", className)}>
+      <Card className={cn("aspect-video w-full border-dashed flex items-center justify-center bg-slate-800/50 border-slate-600", className)}>
         <div className="flex flex-col items-center justify-center text-center text-muted-foreground">
-          <div className="h-16 w-16 mb-4 rounded-lg bg-muted flex items-center justify-center">
-            <Play className="h-8 w-8" />
+          <div className="h-16 w-16 mb-4 rounded-lg bg-slate-700 flex items-center justify-center">
+            <Play className="h-8 w-8 text-slate-400" />
           </div>
           <p className="text-lg font-medium">Upload a video to start editing</p>
           <p className="text-sm mt-2">Drag and drop video files or click upload in the media library</p>

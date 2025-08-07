@@ -94,8 +94,7 @@ export async function generateVideoFromReference(input: GenerateVideoFromReferen
 
 // Model mapping for reference-based video generation
 const referenceModelMapping: Record<string, string> = {
-  'vidu-q1': 'veo-2.0-generate-001',
-  'google-veo': 'veo-2.0-generate-001',
+  'veo2': 'veo-2.0-generate-001',
 };
 
 const generateVideoFromReferenceFlow = ai.defineFlow(

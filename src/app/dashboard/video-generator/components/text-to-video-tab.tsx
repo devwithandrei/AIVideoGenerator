@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth, useUser } from '@clerk/nextjs';
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -38,9 +39,14 @@ import { generateVideoFromText } from "@/ai/flows/generate-video-from-text";
 
 const models = [
   {
-    id: "google-veo",
-    name: "Google Veo",
+    id: "veo2",
+    name: "Veo2",
     description: "High quality video generation with advanced AI capabilities.",
+  },
+  {
+    id: "hailuo",
+    name: "Hailuo",
+    description: "Generate 6s videos with sound from text prompts. Powered by Minimax Video-01.",
   },
 ];
 
@@ -57,6 +63,7 @@ const formSchema = z.object({
 
 export function TextToVideoTab() {
   const { toast } = useToast();
+  const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
 
@@ -73,10 +80,31 @@ export function TextToVideoTab() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Please sign in to generate videos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setVideoUrl("");
     try {
-      const result = await generateVideoFromText(values);
+      let result;
+      if (values.model === "hailuo") {
+        const { generateVideoFromTextHailuo } = await import("@/ai/flows/generate-video-from-text-hailuo");
+        // Hailuo doesn't support custom aspect ratios, it generates in 16:9 format
+        result = await generateVideoFromTextHailuo({
+          ...values,
+          aspectRatio: "16:9", // Hailuo is fixed at 16:9
+          userId: user.id,
+        });
+      } else {
+        result = await generateVideoFromText(values);
+      }
+      
       setVideoUrl(result.videoDataUri);
       toast({
         title: "Success!",
@@ -98,6 +126,9 @@ export function TextToVideoTab() {
   const selectedModelDescription = models.find(
     (m) => m.id === form.watch("model")
   )?.description;
+  
+  const selectedModel = form.watch("model");
+  const isHailuo = selectedModel === "hailuo";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6">
@@ -190,6 +221,11 @@ export function TextToVideoTab() {
                             <FormDescription>
                               {selectedModelDescription}
                             </FormDescription>
+                          )}
+                          {isHailuo && (
+                            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+                              ⚠️ Hailuo generates 6-second videos with sound in 16:9 format only.
+                            </p>
                           )}
                           <FormMessage />
                         </FormItem>

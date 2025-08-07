@@ -3,10 +3,11 @@
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { LayoutDashboard, Clapperboard, ImageIcon, Map, CreditCard, Film, Shield } from "lucide-react";
+import { LayoutDashboard, Clapperboard, ImageIcon, Map, CreditCard, Film, Shield, Home } from "lucide-react";
 import { getAdminEmailsForClient } from "@/lib/admin";
 
 const baseNavItems = [
+  { href: "/", label: "Home", icon: <Home /> },
   { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard /> },
   { href: "/dashboard/video-generator", label: "AI Video Generator", icon: <Clapperboard /> },
   { href: "/dashboard/video-editor", label: "Video Editor", icon: <Film /> },

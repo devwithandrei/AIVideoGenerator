@@ -75,7 +75,7 @@ export function ImageToVideoTab() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: "",
-      model: "google-veo",
+      model: "veo2",
       aspectRatio: "16:9",
       duration: "5s",
       resolution: "1080p",
@@ -116,11 +116,24 @@ export function ImageToVideoTab() {
     setIsLoading(true);
     setVideoUrl("");
     try {
-      const result = await generateVideoFromImage({
-        ...values,
-        images: uploadedImages,
-        references: uploadedReferences,
-      });
+      let result;
+      if (values.model === "hailuo") {
+        const { generateVideoFromImageHailuo } = await import("@/ai/flows/generate-video-from-image-hailuo");
+        // For Hailuo, we'll use the first image
+        const imageDataUri = uploadedImages[0];
+        result = await generateVideoFromImageHailuo({
+          ...values,
+          imageDataUri,
+          aspectRatio: "16:9", // Hailuo is fixed at 16:9
+        });
+      } else {
+        result = await generateVideoFromImage({
+          ...values,
+          images: uploadedImages,
+          references: uploadedReferences,
+        });
+      }
+      
       setVideoUrl(result.videoDataUri);
       toast({
         title: "Success!",
@@ -297,7 +310,8 @@ export function ImageToVideoTab() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="google-veo">Google Veo</SelectItem>
+                          <SelectItem value="veo2">Veo2</SelectItem>
+                <SelectItem value="hailuo">Hailuo</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -92,11 +92,7 @@ export async function generateVideoFromText(input: GenerateVideoFromTextInput): 
 // A simple mapping from the friendly names to the actual model identifiers.
 // This can be expanded as more models become available.
 const modelMapping: Record<string, string> = {
-  'fast-generation': 'veo-2.0-generate-001',
-  'cinematic-generation': 'veo-2.0-generate-001',
-  'stylized-animation': 'veo-2.0-generate-001',
-  'vidu-q1': 'veo-2.0-generate-001',
-  'google-veo': 'veo-2.0-generate-001',
+  'veo2': 'veo-2.0-generate-001',
 };
 
 
