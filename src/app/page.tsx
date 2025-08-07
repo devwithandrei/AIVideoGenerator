@@ -25,13 +25,13 @@ export default function LandingPage() {
           </div>
           
           <div className="container px-3 sm:px-4 md:px-6 relative z-10">
-            <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_600px] lg:gap-12 xl:grid-cols-[1fr_700px]">
               <div className="flex flex-col justify-center space-y-3 sm:space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter lg:text-5xl xl:text-6xl/none font-headline">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter lg:text-4xl xl:text-5xl/none font-headline">
                     Unleash Your Creativity with <span className="text-primary">MediaForge AI</span>
                   </h1>
-                  <p className="max-w-[600px] text-sm sm:text-base text-muted-foreground md:text-xl">
+                  <p className="max-w-[500px] text-xs sm:text-sm text-muted-foreground md:text-base">
                     The all-in-one platform for generating and editing stunning videos, images, and map animations with the power of artificial intelligence.
                   </p>
                 </div>
@@ -63,13 +63,16 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="relative order-first lg:order-last">
-                <Image
-                  src="/images/mediaforge.png"
-                  width="600"
-                  height="400"
-                  alt="MediaForge AI Platform"
-                  className="mx-auto aspect-video overflow-hidden rounded-xl object-cover w-full lg:aspect-square shadow-2xl"
-                />
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="mx-auto aspect-video overflow-hidden rounded-xl object-cover w-full shadow-2xl"
+                >
+                  <source src="/videos/HeroVideo.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </div>
           </div>
