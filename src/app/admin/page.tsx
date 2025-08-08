@@ -15,6 +15,15 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, 
   Users, 
@@ -28,7 +37,15 @@ import {
   Ban,
   CheckCircle,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Coins,
+  ShoppingCart,
+  TrendingUp,
+  Zap,
+  CreditCard,
+  BarChart3,
+  Clock,
+  DollarSign
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getAdminEmailsForClient } from "@/lib/admin";
@@ -45,6 +62,42 @@ interface UserData {
   role: 'admin' | 'user';
   banned: boolean;
   emailVerified: boolean;
+  credits: {
+    balance: number;
+    totalPurchased: number;
+    totalUsed: number;
+    hasUnlimitedAccess: boolean;
+  };
+  recentTransactions: Array<{
+    id: string;
+    type: 'purchase' | 'usage' | 'refund' | 'bonus';
+    amount: number;
+    description: string;
+    model?: string;
+    feature?: string;
+    createdAt: string;
+  }>;
+  purchases: Array<{
+    id: string;
+    amount: number;
+    currency: string;
+    credits: number;
+    status: 'pending' | 'completed' | 'failed' | 'refunded';
+    createdAt: string;
+  }>;
+  usageStats: {
+    totalUsage: number;
+    totalCreditsUsed: number;
+    successCount: number;
+    failedCount: number;
+    successRate: number;
+  };
+  featureUsage: Array<{
+    feature: string;
+    model: string;
+    count: number;
+    totalCredits: number;
+  }>;
 }
 
 export default function AdminPanel() {
@@ -55,6 +108,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'user'>('all');
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
   // Admin check using environment variable
   const adminEmails = getAdminEmailsForClient();
@@ -125,10 +179,10 @@ export default function AdminPanel() {
     try {
       switch (action) {
         case 'view':
-          toast({
-            title: "View User",
-            description: `Viewing details for user ${userId}`,
-          });
+          const user = users.find(u => u.id === userId);
+          if (user) {
+            setSelectedUser(user);
+          }
           break;
         case 'delete':
           const deleteResponse = await fetch('/api/admin/users', {
@@ -221,6 +275,21 @@ export default function AdminPanel() {
     });
   };
 
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(amount / 100);
+  };
+
+  // Calculate overall statistics
+  const totalCreditsPurchased = users.reduce((sum, user) => sum + user.credits.totalPurchased, 0);
+  const totalCreditsUsed = users.reduce((sum, user) => sum + user.credits.totalUsed, 0);
+  const totalRevenue = users.reduce((sum, user) => 
+    sum + user.purchases.filter(p => p.status === 'completed').reduce((pSum, p) => pSum + p.amount, 0), 0
+  );
+  const activeUsers = users.filter(u => u.isActive && u.role === 'user').length;
+
   if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -257,7 +326,7 @@ export default function AdminPanel() {
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1 px-3 py-1">
               <Activity className="h-4 w-4" />
-              <span className="font-semibold">{users.filter(u => u.isActive).length} Active</span>
+              <span className="font-semibold">{activeUsers} Active</span>
             </Badge>
           </div>
           <Button
@@ -273,7 +342,7 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -289,37 +358,37 @@ export default function AdminPanel() {
         </Card>
         <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Active Users</CardTitle>
-            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Credits Purchased</CardTitle>
+            <Coins className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-900 dark:text-green-100">{users.filter(u => u.isActive).length}</div>
+            <div className="text-3xl font-bold text-green-900 dark:text-green-100">{totalCreditsPurchased.toLocaleString()}</div>
             <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-              {users.length > 0 ? Math.round((users.filter(u => u.isActive).length / users.length) * 100) : 0}% of total
+              {totalCreditsUsed.toLocaleString()} used
             </p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Admins</CardTitle>
-            <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Revenue</CardTitle>
+            <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">{users.filter(u => u.role === 'admin').length}</div>
+            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">{formatCurrency(totalRevenue)}</div>
             <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-              System administrators
+              From completed purchases
             </p>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/50">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-700 dark:text-red-300">Banned Users</CardTitle>
-            <Ban className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">Active Users</CardTitle>
+            <TrendingUp className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-900 dark:text-red-100">{users.filter(u => !u.isActive).length}</div>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-              Suspended accounts
+            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">{activeUsers}</div>
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+              {users.length > 0 ? Math.round((activeUsers / users.length) * 100) : 0}% of total
             </p>
           </CardContent>
         </Card>
@@ -366,7 +435,7 @@ export default function AdminPanel() {
             </div>
           </div>
 
-          {/* Users Table */}
+          {/* Enhanced Users Table */}
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
@@ -378,16 +447,16 @@ export default function AdminPanel() {
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                                     <TableRow>
-                     <TableHead>User</TableHead>
-                     <TableHead>Email</TableHead>
-                     <TableHead>Role</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead>Verified</TableHead>
-                     <TableHead>Joined</TableHead>
-                     <TableHead>Last Active</TableHead>
-                     <TableHead className="text-right">Actions</TableHead>
-                   </TableRow>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Credits</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Usage</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
@@ -432,41 +501,203 @@ export default function AdminPanel() {
                           {user.role}
                         </Badge>
                       </TableCell>
-                                             <TableCell>
-                         <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                           {user.isActive ? 'Active' : 'Banned'}
-                         </Badge>
-                       </TableCell>
-                       <TableCell>
-                         <Badge variant={user.emailVerified ? 'default' : 'secondary'}>
-                           {user.emailVerified ? 'Verified' : 'Unverified'}
-                         </Badge>
-                       </TableCell>
-                       <TableCell>
-                         <div className="flex items-center gap-2">
-                           <Calendar className="h-3 w-3 text-muted-foreground" />
-                           {formatDate(user.createdAt)}
-                         </div>
-                       </TableCell>
                       <TableCell>
-                        {user.lastSignInAt ? (
-                          <div className="flex items-center gap-2">
-                            <Activity className="h-3 w-3 text-muted-foreground" />
-                            {formatDate(user.lastSignInAt)}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Never</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <Coins className="h-3 w-3 text-yellow-600" />
+                          {user.credits.hasUnlimitedAccess ? (
+                            <Badge variant="outline" className="text-green-600">
+                              Unlimited
+                            </Badge>
+                          ) : (
+                            <span className="font-medium">{user.credits.balance}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.isActive ? 'default' : 'destructive'}>
+                          {user.isActive ? 'Active' : 'Banned'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-sm">
+                            {user.usageStats.totalUsage} uses
+                          </span>
+                          {user.usageStats.totalUsage > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {user.usageStats.successRate.toFixed(0)}%
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          {formatDate(user.createdAt)}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUserAction(user.id, 'view')}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedUser(user)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>User Details - {user.firstName} {user.lastName}</DialogTitle>
+                                <DialogDescription>
+                                  Comprehensive user information including credits, purchases, and usage statistics.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <Tabs defaultValue="overview" className="w-full">
+                                <TabsList className="grid w-full grid-cols-4">
+                                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                                  <TabsTrigger value="credits">Credits</TabsTrigger>
+                                  <TabsTrigger value="purchases">Purchases</TabsTrigger>
+                                  <TabsTrigger value="usage">Usage</TabsTrigger>
+                                </TabsList>
+                                
+                                <TabsContent value="overview" className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-sm">Basic Info</CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="space-y-2">
+                                        <div><strong>Email:</strong> {user.email}</div>
+                                        <div><strong>Role:</strong> {user.role}</div>
+                                        <div><strong>Status:</strong> {user.isActive ? 'Active' : 'Banned'}</div>
+                                        <div><strong>Verified:</strong> {user.emailVerified ? 'Yes' : 'No'}</div>
+                                        <div><strong>Joined:</strong> {formatDate(user.createdAt)}</div>
+                                        {user.lastSignInAt && (
+                                          <div><strong>Last Active:</strong> {formatDate(user.lastSignInAt)}</div>
+                                        )}
+                                      </CardContent>
+                                    </Card>
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-sm">Credit Summary</CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="space-y-2">
+                                        <div><strong>Balance:</strong> {user.credits.hasUnlimitedAccess ? 'Unlimited' : user.credits.balance}</div>
+                                        <div><strong>Total Purchased:</strong> {user.credits.totalPurchased}</div>
+                                        <div><strong>Total Used:</strong> {user.credits.totalUsed}</div>
+                                        <div><strong>Usage Count:</strong> {user.usageStats.totalUsage}</div>
+                                        <div><strong>Success Rate:</strong> {user.usageStats.successRate.toFixed(1)}%</div>
+                                      </CardContent>
+                                    </Card>
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="credits" className="space-y-4">
+                                  <Card>
+                                    <CardHeader>
+                                      <CardTitle className="text-sm">Recent Transactions</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="space-y-2">
+                                        {user.recentTransactions.length > 0 ? (
+                                          user.recentTransactions.map((tx) => (
+                                            <div key={tx.id} className="flex items-center justify-between p-2 border rounded">
+                                              <div>
+                                                <div className="font-medium">{tx.description}</div>
+                                                <div className="text-sm text-muted-foreground">
+                                                  {tx.type} • {tx.model || 'N/A'} • {formatDate(tx.createdAt)}
+                                                </div>
+                                              </div>
+                                              <Badge variant={tx.amount > 0 ? 'default' : 'secondary'}>
+                                                {tx.amount > 0 ? '+' : ''}{tx.amount}
+                                              </Badge>
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <p className="text-muted-foreground">No recent transactions</p>
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </TabsContent>
+                                
+                                <TabsContent value="purchases" className="space-y-4">
+                                  <Card>
+                                    <CardHeader>
+                                      <CardTitle className="text-sm">Purchase History</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="space-y-2">
+                                        {user.purchases.length > 0 ? (
+                                          user.purchases.map((purchase) => (
+                                            <div key={purchase.id} className="flex items-center justify-between p-2 border rounded">
+                                              <div>
+                                                <div className="font-medium">{purchase.credits} credits</div>
+                                                <div className="text-sm text-muted-foreground">
+                                                  {formatCurrency(purchase.amount, purchase.currency)} • {purchase.status} • {formatDate(purchase.createdAt)}
+                                                </div>
+                                              </div>
+                                              <Badge variant={purchase.status === 'completed' ? 'default' : 'secondary'}>
+                                                {purchase.status}
+                                              </Badge>
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <p className="text-muted-foreground">No purchase history</p>
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </TabsContent>
+                                
+                                <TabsContent value="usage" className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-sm">Usage Statistics</CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="space-y-2">
+                                        <div><strong>Total Usage:</strong> {user.usageStats.totalUsage}</div>
+                                        <div><strong>Credits Used:</strong> {user.usageStats.totalCreditsUsed}</div>
+                                        <div><strong>Success Count:</strong> {user.usageStats.successCount}</div>
+                                        <div><strong>Failed Count:</strong> {user.usageStats.failedCount}</div>
+                                        <div><strong>Success Rate:</strong> {user.usageStats.successRate.toFixed(1)}%</div>
+                                      </CardContent>
+                                    </Card>
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-sm">Feature Usage</CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <div className="space-y-2">
+                                          {user.featureUsage.length > 0 ? (
+                                            user.featureUsage.map((usage, index) => (
+                                              <div key={index} className="flex items-center justify-between p-2 border rounded">
+                                                <div>
+                                                  <div className="font-medium">{usage.feature}</div>
+                                                  <div className="text-sm text-muted-foreground">{usage.model}</div>
+                                                </div>
+                                                <div className="text-right">
+                                                  <div className="font-medium">{usage.count}</div>
+                                                  <div className="text-sm text-muted-foreground">{usage.totalCredits} credits</div>
+                                                </div>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <p className="text-muted-foreground">No feature usage</p>
+                                          )}
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </div>
+                                </TabsContent>
+                              </Tabs>
+                            </DialogContent>
+                          </Dialog>
                           {user.isActive ? (
                             <Button
                               variant="ghost"

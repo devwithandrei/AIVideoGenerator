@@ -7,28 +7,54 @@ export class CreditService {
    * Get user's credit balance
    */
   static async getUserCredits(userId: string) {
-    const userCredits = await db
-      .select()
-      .from(credits)
-      .where(eq(credits.userId, userId))
-      .limit(1);
-
-    if (userCredits.length === 0) {
-      // Create new credit record for user
-      const newCredits = await db
-        .insert(credits)
-        .values({
-          userId,
-          balance: 0,
-          totalPurchased: 0,
-          totalUsed: 0,
-        })
-        .returning();
-
-      return newCredits[0];
+    if (!db) {
+      console.warn('Database not available, returning default credits');
+      return {
+        id: 'default',
+        userId,
+        balance: 0,
+        totalPurchased: 0,
+        totalUsed: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }
 
-    return userCredits[0];
+    try {
+      const userCredits = await db
+        .select()
+        .from(credits)
+        .where(eq(credits.userId, userId))
+        .limit(1);
+
+      if (userCredits.length === 0) {
+        // Create new credit record for user
+        const newCredits = await db
+          .insert(credits)
+          .values({
+            userId,
+            balance: 0,
+            totalPurchased: 0,
+            totalUsed: 0,
+          })
+          .returning();
+
+        return newCredits[0];
+      }
+
+      return userCredits[0];
+    } catch (error) {
+      console.error('Error getting user credits:', error);
+      return {
+        id: 'default',
+        userId,
+        balance: 0,
+        totalPurchased: 0,
+        totalUsed: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
   }
 
   /**
@@ -40,52 +66,72 @@ export class CreditService {
     currentBalance: number;
     isAdmin: boolean;
   }> {
-    // Check if user is admin
-    const user = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    const isAdmin = user.length > 0 && user[0].role === 'admin';
-
-    if (isAdmin) {
+    if (!db) {
+      console.warn('Database not available, allowing access');
       return {
         hasCredits: true,
         requiredCredits: 0,
         currentBalance: 0,
-        isAdmin: true,
+        isAdmin: false,
       };
     }
 
-    // Get feature pricing
-    const pricing = await db
-      .select()
-      .from(featurePricing)
-      .where(
-        and(
-          eq(featurePricing.feature, feature),
-          eq(featurePricing.model, model),
-          eq(featurePricing.isActive, true)
+    try {
+      // Check if user is admin
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      const isAdmin = user.length > 0 && user[0].role === 'admin';
+
+      if (isAdmin) {
+        return {
+          hasCredits: true,
+          requiredCredits: 0,
+          currentBalance: 0,
+          isAdmin: true,
+        };
+      }
+
+      // Get feature pricing
+      const pricing = await db
+        .select()
+        .from(featurePricing)
+        .where(
+          and(
+            eq(featurePricing.feature, feature),
+            eq(featurePricing.model, model),
+            eq(featurePricing.isActive, true)
+          )
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    if (pricing.length === 0) {
-      throw new Error(`No pricing found for feature: ${feature} with model: ${model}`);
+      if (pricing.length === 0) {
+        throw new Error(`No pricing found for feature: ${feature} with model: ${model}`);
+      }
+
+      const requiredCredits = pricing[0].creditsPerUse;
+
+      // Get user's credit balance
+      const userCredits = await this.getUserCredits(userId);
+
+      return {
+        hasCredits: userCredits.balance >= requiredCredits,
+        requiredCredits,
+        currentBalance: userCredits.balance,
+        isAdmin: false,
+      };
+    } catch (error) {
+      console.error('Error checking credits:', error);
+      return {
+        hasCredits: true,
+        requiredCredits: 0,
+        currentBalance: 0,
+        isAdmin: false,
+      };
     }
-
-    const requiredCredits = pricing[0].creditsPerUse;
-
-    // Get user's credit balance
-    const userCredits = await this.getUserCredits(userId);
-
-    return {
-      hasCredits: userCredits.balance >= requiredCredits,
-      requiredCredits,
-      currentBalance: userCredits.balance,
-      isAdmin: false,
-    };
   }
 
   /**
@@ -284,32 +330,32 @@ export class CreditService {
       {
         feature: 'video-generation',
         model: 'hailuo',
-        creditsPerUse: 10,
-        description: 'Hailuo video generation (6s with sound)',
+        creditsPerUse: 8,
+        description: 'Hailuo video generation',
       },
       {
         feature: 'video-generation',
         model: 'veo2',
-        creditsPerUse: 5,
+        creditsPerUse: 15,
         description: 'Veo2 video generation',
       },
       {
         feature: 'map-animation',
         model: 'hailuo',
-        creditsPerUse: 8,
+        creditsPerUse: 5,
         description: 'Hailuo map animation',
       },
       {
         feature: 'map-animation',
         model: 'veo2',
-        creditsPerUse: 4,
+        creditsPerUse: 10,
         description: 'Veo2 map animation',
       },
       {
         feature: 'image-generation',
-        model: 'mock',
-        creditsPerUse: 1,
-        description: 'Mock image generation',
+        model: 'default',
+        creditsPerUse: 3,
+        description: 'Image generation',
       },
     ];
 
@@ -338,8 +384,8 @@ export class CreditService {
       {
         name: 'Starter Pack',
         credits: 50,
-        price: 999, // $9.99
-        description: 'Perfect for trying out our features',
+        price: 0, // Free for new users
+        description: 'Free starter pack for new users',
       },
       {
         name: 'Pro Pack',

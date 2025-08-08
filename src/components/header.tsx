@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser, useClerk } from '@clerk/nextjs';
-import { Gem, User, Download, Share2, Settings, LogOut, Bell, Zap } from "lucide-react";
+import { User, Download, Share2, Settings, LogOut } from "lucide-react";
+import { CreditDisplay } from "@/components/credit-display";
+import { NotificationBell } from "@/components/notification-bell";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,16 +38,22 @@ export function Header() {
     };
 
     return (
-        <header className="px-4 lg:px-6 h-14 flex items-center bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b shrink-0">
+        <header className="h-14 bg-background/95 backdrop-blur-sm sticky top-0 z-50 border-b shrink-0">
+          <div className="container mx-auto px-4 md:px-6 h-full flex items-center justify-between">
             <div className="flex items-center">
               {!hasSidebar && (
                 <Link href="/" className="flex items-center gap-2" prefetch={false}>
-                  <Gem className="h-8 w-8 text-primary" />
-                  <h1 className="text-xl font-bold font-headline text-sidebar-foreground">MediaForge AI</h1>
+                  <Image 
+                    src="/images/logo.png" 
+                    alt="MediaForge AI Logo" 
+                    width={32} 
+                    height={32} 
+                    className="h-8 w-8"
+                  />
                 </Link>
               )}
             </div>
-            <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+            <nav className="flex gap-4 sm:gap-6 items-center">
                 <Link href="/#features" className="text-sm font-medium hover:underline underline-offset-4" prefetch={false}>
                     Features
                 </Link>
@@ -53,20 +62,21 @@ export function Header() {
                 </Link>
                 
                 {/* API Link */}
-                <Button variant="ghost" size="sm">
-                  API
-                </Button>
+                <Link href="/api-docs" prefetch={false}>
+                  <Button variant="ghost" size="sm">
+                    API
+                  </Button>
+                </Link>
 
                 {/* Earn Credits */}
-                <Button variant="ghost" size="sm">
+                <Link href="/earn-credits" prefetch={false} className="text-sm font-medium hover:underline underline-offset-4">
                   Earn Credits
-                </Button>
+                </Link>
 
                 {/* Credits Display */}
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
-                  40
-                </Badge>
+                <SignedIn>
+                  <CreditDisplay />
+                </SignedIn>
 
                 {/* Subscribe Button */}
                 <Button variant="outline" size="sm">
@@ -88,10 +98,7 @@ export function Header() {
                 
                 <SignedIn>
                     {/* Notification Bell - Only shown when authenticated */}
-                    <Button variant="ghost" size="sm" className="relative">
-                      <Bell className="h-4 w-4" />
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </Button>
+                    <NotificationBell />
                     
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -134,12 +141,13 @@ export function Header() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={handleSignOut}>
                                 <LogOut className="mr-2 h-4 w-4" />
-                                <span>Sign out</span>
+                                <span>Log out</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </SignedIn>
             </nav>
+          </div>
         </header>
-    )
+    );
 }

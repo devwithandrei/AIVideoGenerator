@@ -185,8 +185,10 @@ export function MapAnimationClient() {
                         <FormItem>
                           <FormLabel>Animation Prompt</FormLabel>
                           <FormControl>
-                            <Input
+                            <Textarea
                               placeholder="e.g., Highlight the borders of France with a glowing animation, Show a journey from Tokyo to Kyoto with cherry blossoms, Animate the Great Wall of China with historical markers"
+                              className="resize-none"
+                              rows={5}
                               {...field}
                             />
                           </FormControl>

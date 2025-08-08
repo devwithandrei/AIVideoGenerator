@@ -4,18 +4,15 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  CreditCard, 
   Coins, 
-  ShoppingCart, 
-  History, 
   TrendingUp,
-  AlertCircle,
   CheckCircle,
-  Package
+  AlertCircle
 } from "lucide-react";
+import { CreditPurchase } from "@/components/credit-purchase";
+import { CreditDisplay } from "@/components/credit-display";
 import { toast } from "@/hooks/use-toast";
 
 interface CreditBalance {
@@ -24,23 +21,12 @@ interface CreditBalance {
   totalUsed: number;
 }
 
-interface CreditPackage {
-  id: string;
-  name: string;
-  credits: number;
-  price: number;
-  currency: string;
-  description: string;
-}
-
 export default function BillingPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const router = useRouter();
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null);
-  const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -63,13 +49,6 @@ export default function BillingPage() {
         const balance = await balanceResponse.json();
         setCreditBalance(balance);
       }
-
-      // Load credit packages
-      const packagesResponse = await fetch('/api/credits/packages');
-      if (packagesResponse.ok) {
-        const packagesData = await packagesResponse.json();
-        setPackages(packagesData);
-      }
     } catch (error) {
       console.error('Error loading credit data:', error);
       toast({
@@ -80,43 +59,6 @@ export default function BillingPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePurchase = async (packageId: string, credits: number, price: number) => {
-    try {
-      setPurchasing(packageId);
-      
-      // For now, we'll simulate a purchase
-      // In a real implementation, you'd integrate with Stripe or another payment processor
-      toast({
-        title: "Purchase Feature",
-        description: "Payment processing will be implemented with Stripe integration.",
-      });
-
-      // Simulate successful purchase
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Success",
-        description: `Successfully purchased ${credits} credits!`,
-      });
-
-      // Reload credit data
-      await loadCreditData();
-    } catch (error) {
-      console.error('Error purchasing credits:', error);
-      toast({
-        title: "Error",
-        description: "Failed to purchase credits. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setPurchasing(null);
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return `$${(price / 100).toFixed(2)}`;
   };
 
   if (loading) {
@@ -134,7 +76,7 @@ export default function BillingPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Billing & Credits</h1>
         <p className="text-muted-foreground">
-          Manage your credits and purchase more to continue using our AI features.
+          Get free credits to start, then purchase credit packs to continue using our AI features.
         </p>
       </div>
 
@@ -168,56 +110,38 @@ export default function BillingPage() {
                 <div className="text-sm text-muted-foreground">Total Used</div>
               </div>
             </div>
+            
+            {/* Low Credit Warning */}
+            {creditBalance.balance < 10 && (
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center gap-2 text-amber-800">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="font-medium">Low Credits</span>
+                </div>
+                <p className="text-sm text-amber-700 mt-1">
+                  You're running low on credits. Purchase more to continue using our features.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Credit Packages */}
-      <Card>
+      {/* Credit Purchase */}
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Available Packages
+            <Coins className="h-5 w-5" />
+            Credit Packs
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {packages.map((pkg) => (
-              <Card key={pkg.id} className="relative">
-                <CardHeader>
-                  <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                  <div className="text-3xl font-bold text-primary">
-                    {pkg.credits} Credits
-                  </div>
-                  <div className="text-2xl font-semibold">
-                    {formatPrice(pkg.price)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {pkg.description}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full"
-                    onClick={() => handlePurchase(pkg.id, pkg.credits, pkg.price)}
-                    disabled={purchasing === pkg.id}
-                  >
-                    {purchasing === pkg.id ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Purchase
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground">
+              Choose a credit pack to add credits to your account. Credits are consumed as you use our AI features.
+            </p>
           </div>
+          <CreditPurchase />
         </CardContent>
       </Card>
 
@@ -226,29 +150,34 @@ export default function BillingPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Feature Pricing
+            Credit Consumption
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground">
+              Credits are automatically deducted from your account when you use our AI features. Each feature has a specific credit cost.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h4 className="font-semibold">Video Generation</h4>
               <div className="text-sm text-muted-foreground">
-                <div>• Hailuo (6s with sound): 10 credits</div>
-                <div>• Veo2: 5 credits</div>
+                <div>• Hailuo: 8 credits per video</div>
+                <div>• Veo2: 15 credits per video</div>
               </div>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold">Map Animation</h4>
               <div className="text-sm text-muted-foreground">
-                <div>• Hailuo: 8 credits</div>
-                <div>• Veo2: 4 credits</div>
+                <div>• Hailuo: 5 credits per animation</div>
+                <div>• Veo2: 10 credits per animation</div>
               </div>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold">Image Generation</h4>
               <div className="text-sm text-muted-foreground">
-                <div>• Mock generation: 1 credit</div>
+                <div>• Default: 3 credits per image</div>
               </div>
             </div>
           </div>

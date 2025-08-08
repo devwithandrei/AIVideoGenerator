@@ -97,6 +97,54 @@ export const featurePricing = pgTable('feature_pricing', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// Notifications table - user notifications
+export const notifications = pgTable('notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  type: text('type').notNull().$type<'welcome' | 'credit' | 'system' | 'info'>(),
+  isRead: boolean('is_read').notNull().default(false),
+  metadata: text('metadata'), // JSON string for additional data
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Referral links - one per referrer
+export const referralLinks = pgTable('referral_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  referrerUserId: text('referrer_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  code: varchar('code', { length: 64 }).notNull().unique(),
+  clicks: integer('clicks').notNull().default(0),
+  signups: integer('signups').notNull().default(0),
+  proPurchases: integer('pro_purchases').notNull().default(0),
+  creditsEarned: integer('credits_earned').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Referrals - mapping of referred users to referrers
+export const referrals = pgTable('referrals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  referrerUserId: text('referrer_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  referredUserId: text('referred_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  linkCode: varchar('link_code', { length: 64 }).notNull(),
+  status: text('status').notNull().$type<'signed_up' | 'pro_purchased'>().default('signed_up'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Referral events - timeline of referral actions
+export const referralEvents = pgTable('referral_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  referrerUserId: text('referrer_user_id').references(() => users.id, { onDelete: 'cascade' }),
+  referredUserId: text('referred_user_id').references(() => users.id, { onDelete: 'cascade' }),
+  linkCode: varchar('link_code', { length: 64 }),
+  type: text('type').notNull().$type<'click' | 'signup' | 'pro_purchase'>(),
+  metadata: text('metadata'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Credit = typeof credits.$inferSelect;
@@ -110,4 +158,12 @@ export type NewCreditPackage = typeof creditPackages.$inferInsert;
 export type Purchase = typeof purchases.$inferSelect;
 export type NewPurchase = typeof purchases.$inferInsert;
 export type FeaturePricing = typeof featurePricing.$inferSelect;
-export type NewFeaturePricing = typeof featurePricing.$inferInsert; 
+export type NewFeaturePricing = typeof featurePricing.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert; 
+export type ReferralLink = typeof referralLinks.$inferSelect;
+export type NewReferralLink = typeof referralLinks.$inferInsert;
+export type Referral = typeof referrals.$inferSelect;
+export type NewReferral = typeof referrals.$inferInsert;
+export type ReferralEvent = typeof referralEvents.$inferSelect;
+export type NewReferralEvent = typeof referralEvents.$inferInsert;

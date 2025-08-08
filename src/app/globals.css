@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .animate-bell-shake {
+    animation: bell-shake 0.5s ease-in-out infinite;
+  }
+  
+  @keyframes bell-shake {
+    0%, 100% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-5deg);
+    }
+    75% {
+      transform: rotate(5deg);
+    }
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -1221,4 +1239,13 @@
 
 .timeline-update {
   animation: timelineUpdate 0.3s ease-in-out;
+}
+
+/* Prevent horizontal overflow and right-side gaps */
+@layer base {
+  html, body {
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
+  }
 }

@@ -1,6 +1,9 @@
 import { auth, currentUser, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getAdminEmails } from '@/lib/admin';
+import { db } from '@/lib/db';
+import { credits, creditTransactions, purchases, usageLogs } from '@/lib/db/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -54,11 +57,9 @@ export async function GET() {
     const users = Array.isArray(data) ? data : (data.data || []);
     console.log('Users found:', users.length);
 
-
-
-    // Transform Clerk users to our format
-    console.log('Transforming users...');
-    const transformedUsers = users.map(user => {
+    // Transform Clerk users to our format with credit information
+    console.log('Transforming users with credit data...');
+    const transformedUsers = await Promise.all(users.map(async (user) => {
       console.log('Processing user:', user.id, user.email_addresses?.[0]?.email_address);
       
       // Check if user is admin based on email or metadata
@@ -66,6 +67,78 @@ export async function GET() {
       const isAdmin = user.public_metadata?.role === 'admin' || 
                      (userEmail && getAdminEmails().includes(userEmail));
       
+      // Get credit information from database
+      let creditBalance = {
+        balance: 0,
+        totalPurchased: 0,
+        totalUsed: 0,
+      };
+      let recentTransactions: any[] = [];
+      let purchaseHistory: any[] = [];
+      let stats = {
+        totalUsage: 0,
+        totalCreditsUsed: 0,
+        successCount: 0,
+        failedCount: 0,
+      };
+      let featureUsage: any[] = [];
+
+      try {
+        if (db) {
+          const userCredits = await db
+            .select()
+            .from(credits)
+            .where(eq(credits.userId, user.id))
+            .limit(1);
+
+          creditBalance = userCredits.length > 0 ? userCredits[0] : creditBalance;
+
+          // Get recent transactions
+          recentTransactions = await db
+            .select()
+            .from(creditTransactions)
+            .where(eq(creditTransactions.userId, user.id))
+            .orderBy(desc(creditTransactions.createdAt))
+            .limit(5);
+
+          // Get purchase history
+          purchaseHistory = await db
+            .select()
+            .from(purchases)
+            .where(eq(purchases.userId, user.id))
+            .orderBy(desc(purchases.createdAt))
+            .limit(10);
+
+          // Get usage statistics
+          const usageStats = await db
+            .select({
+              totalUsage: sql<number>`count(*)`,
+              totalCreditsUsed: sql<number>`sum(credits_used)`,
+              successCount: sql<number>`count(*) filter (where status = 'success')`,
+              failedCount: sql<number>`count(*) filter (where status = 'failed')`,
+            })
+            .from(usageLogs)
+            .where(eq(usageLogs.userId, user.id));
+
+          stats = usageStats[0] || stats;
+
+          // Get feature usage breakdown
+          featureUsage = await db
+            .select({
+              feature: usageLogs.feature,
+              model: usageLogs.model,
+              count: sql<number>`count(*)`,
+              totalCredits: sql<number>`sum(credits_used)`,
+            })
+            .from(usageLogs)
+            .where(eq(usageLogs.userId, user.id))
+            .groupBy(usageLogs.feature, usageLogs.model);
+        }
+      } catch (error) {
+        console.error('Database error for user', user.id, ':', error);
+        // Continue with default values if database is not available
+      }
+
       return {
         id: user.id,
         email: user.email_addresses?.[0]?.email_address || 'No email',
@@ -78,9 +151,55 @@ export async function GET() {
         role: isAdmin ? 'admin' : 'user',
         banned: user.banned || false,
         emailVerified: user.email_addresses?.[0]?.verification?.status === 'verified',
+        
+        // Credit Information
+        credits: {
+          balance: creditBalance.balance,
+          totalPurchased: creditBalance.totalPurchased,
+          totalUsed: creditBalance.totalUsed,
+          hasUnlimitedAccess: isAdmin,
+        },
+        
+        // Recent Activity
+        recentTransactions: recentTransactions.map(tx => ({
+          id: tx.id,
+          type: tx.type,
+          amount: tx.amount,
+          description: tx.description,
+          model: tx.model,
+          feature: tx.feature,
+          createdAt: tx.createdAt.toISOString(),
+        })),
+        
+        // Purchase History
+        purchases: purchaseHistory.map(purchase => ({
+          id: purchase.id,
+          amount: purchase.amount,
+          currency: purchase.currency,
+          credits: purchase.credits,
+          status: purchase.status,
+          createdAt: purchase.createdAt.toISOString(),
+        })),
+        
+        // Usage Statistics
+        usageStats: {
+          totalUsage: Number(stats.totalUsage),
+          totalCreditsUsed: Number(stats.totalCreditsUsed),
+          successCount: Number(stats.successCount),
+          failedCount: Number(stats.failedCount),
+          successRate: stats.totalUsage > 0 ? (Number(stats.successCount) / Number(stats.totalUsage)) * 100 : 0,
+        },
+        
+        // Feature Usage Breakdown
+        featureUsage: featureUsage.map(usage => ({
+          feature: usage.feature,
+          model: usage.model,
+          count: Number(usage.count),
+          totalCredits: Number(usage.totalCredits),
+        })),
       };
-    });
-    console.log('Transformed users:', transformedUsers.length);
+    }));
+    console.log('Transformed users with credit data:', transformedUsers.length);
 
     return NextResponse.json({ users: transformedUsers });
   } catch (error) {
