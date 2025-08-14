@@ -1,0 +1,32 @@
+{
+  "name": "newspaper-remotion",
+  "version": "1.0.0",
+  "description": "Remotion project for Newspaper Animator video rendering",
+  "main": "index.js",
+  "scripts": {
+    "start": "remotion preview src/index.ts",
+    "build": "remotion render src/index.ts NewspaperSpin out/video.mp4",
+    "render": "remotion render src/index.ts NewspaperSpin out/video.mp4",
+    "preview": "remotion preview src/index.ts",
+    "upgrade": "remotion upgrade",
+    "test": "eslint src --ext ts,tsx,js,jsx && tsc"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.333",
+    "@remotion/cli": "^4.0.333",
+    "@remotion/player": "^4.0.333",
+    "@remotion/renderer": "^4.0.333",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "browserslist": [
+    "last 1 Chrome version",
+    "last 1 Firefox version",
+    "last 1 Safari version"
+  ]
+}
