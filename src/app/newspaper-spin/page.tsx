@@ -153,6 +153,7 @@ export default function NewspaperSpinPage() {
           }
           
           localStorage.setItem('newspaperSpinVideos', JSON.stringify(existingVideos));
+          console.log('Saved video to localStorage:', newVideo.name, 'Cloudinary URL:', result.video.url);
         } catch (error) {
           console.error('Error saving to localStorage:', error);
         }
@@ -403,7 +404,14 @@ export default function NewspaperSpinPage() {
   // Load saved videos on component mount
   React.useEffect(() => {
     const loadVideos = async () => {
-      if (!user?.id) return; // Don't load videos if user is not authenticated
+      // Wait for user to be loaded
+      if (!isLoaded) return;
+      
+      // If user is not authenticated, clear videos
+      if (!user?.id) {
+        setSavedVideos([]);
+        return;
+      }
       
       try {
         const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
@@ -430,6 +438,7 @@ export default function NewspaperSpinPage() {
           )
         );
         
+        console.log('Loaded videos for user:', user.id, 'Count:', uniqueVideos.length);
         setSavedVideos(uniqueVideos);
         
         // Update localStorage with cleaned videos if needed
@@ -455,7 +464,7 @@ export default function NewspaperSpinPage() {
     };
     
     loadVideos();
-  }, [user?.id]);
+  }, [user?.id, isLoaded]);
 
   // Show loading state while user is being loaded
   if (!isLoaded) {
@@ -795,7 +804,7 @@ export default function NewspaperSpinPage() {
                   <Card key={video.id} className="overflow-hidden">
                     <CardContent className="p-0">
                       <div className="relative aspect-video bg-black">
-                        {video.videoUrl && (video.videoUrl.startsWith('blob:') || video.videoUrl.startsWith('data:video/')) ? (
+                        {video.videoUrl ? (
                           <video
                             src={video.videoUrl}
                             controls
