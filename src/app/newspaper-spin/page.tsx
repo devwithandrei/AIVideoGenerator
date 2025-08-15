@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Play, Download, Newspaper, Trash2 } from 'lucide-react';
+import { Loader2, Play, Download, Newspaper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { NewspaperSpinCanvas } from '@/components/NewspaperSpinCanvas';
 import { NewspaperSearchCanvas } from '@/components/NewspaperSearchCanvas';
@@ -30,20 +29,9 @@ interface GenerateRequest {
   duration: '5s' | '10s' | '15s' | '20s' | '25s' | '30s' | 'auto';
 }
 
-interface SavedVideo {
-  id: string;
-  name: string;
-  theme: 'light' | 'dark';
-  aspect: 'landscape' | 'vertical';
-  videoUrl: string;
-  cloudinaryId?: string; // Cloudinary public_id
-  createdAt: Date;
-  fileName: string;
-  userId?: string; // User ID for filtering
-}
+
 
 export default function NewspaperSpinPage() {
-  const { user, isLoaded } = useUser();
   const [formData, setFormData] = useState<GenerateRequest>({
     name: '',
     theme: 'light',
@@ -53,140 +41,20 @@ export default function NewspaperSpinPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [savedVideos, setSavedVideos] = useState<SavedVideo[]>([]);
   const [newspaperImage, setNewspaperImage] = useState<string | null>(null);
   const [effectType, setEffectType] = useState<'spin' | 'search'>('spin');
   const { toast } = useToast();
 
-  const handleVideoGenerated = async (blob: Blob) => {
+  const handleVideoGenerated = (blob: Blob) => {
     console.log('Video generated, blob size:', blob.size);
     const url = URL.createObjectURL(blob);
     setGeneratedVideo(url);
     setIsGenerating(false);
     
-    try {
-      // Upload to Cloudinary
-      const uploadFormData = new FormData();
-      uploadFormData.append('video', blob, `newspaper-animation-${formData.name}.mp4`);
-      uploadFormData.append('metadata', JSON.stringify({
-        name: formData.name,
-        theme: formData.theme,
-        aspect: formData.aspect,
-        effectType,
-        duration: formData.duration,
-        userId: user?.id,
-      }));
-
-      const response = await fetch('/api/upload-video', {
-        method: 'POST',
-        body: uploadFormData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload to Cloudinary');
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // Create unique ID
-        const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Save the video to the collection with Cloudinary URL
-        const newVideo: SavedVideo = {
-          id: uniqueId,
-          name: formData.name,
-          theme: formData.theme,
-          aspect: formData.aspect,
-          videoUrl: result.video.url, // Use Cloudinary URL
-          cloudinaryId: result.video.public_id, // Store Cloudinary ID
-          createdAt: new Date(),
-          fileName: `newspaper-animation-${formData.name}.mp4`,
-          userId: user?.id, // Store user ID
-        };
-        
-        // Check if video with same name and settings already exists
-        setSavedVideos(prev => {
-          const existingVideo = prev.find(video => 
-            video.name === newVideo.name && 
-            video.theme === newVideo.theme && 
-            video.aspect === newVideo.aspect
-          );
-          
-          if (existingVideo) {
-            // Replace the existing video instead of adding duplicate
-            return prev.map(video => 
-              video.id === existingVideo.id ? newVideo : video
-            );
-          } else {
-            // Add new video
-            return [newVideo, ...prev];
-          }
-        });
-        
-        // Update localStorage with metadata only
-        try {
-          const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
-          const existingVideoIndex = existingVideos.findIndex((video: SavedVideo) => 
-            video.name === newVideo.name && 
-            video.theme === newVideo.theme && 
-            video.aspect === newVideo.aspect
-          );
-          
-          if (existingVideoIndex !== -1) {
-            // Replace existing video
-            existingVideos[existingVideoIndex] = {
-              ...newVideo,
-              videoUrl: result.video.url // Store Cloudinary URL
-            };
-          } else {
-            // Add new video
-            existingVideos.unshift({
-              ...newVideo,
-              videoUrl: result.video.url // Store Cloudinary URL
-            });
-          }
-          
-          // Limit to 20 videos to prevent storage issues
-          if (existingVideos.length > 20) {
-            existingVideos.splice(20);
-          }
-          
-          localStorage.setItem('newspaperSpinVideos', JSON.stringify(existingVideos));
-          console.log('Saved video to localStorage:', newVideo.name, 'Cloudinary URL:', result.video.url);
-        } catch (error) {
-          console.error('Error saving to localStorage:', error);
-        }
-        
-        toast({
-          title: 'Success!',
-          description: 'Your newspaper animation video has been generated and saved to the cloud',
-        });
-      } else {
-        throw new Error(result.error || 'Upload failed');
-      }
-    } catch (error) {
-      console.error('Error uploading to Cloudinary:', error);
-      toast({
-        title: 'Upload Error',
-        description: 'Video generated but failed to save to cloud. It will be available temporarily.',
-        variant: 'destructive',
-      });
-      
-      // Fallback: save locally with blob URL
-      const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const newVideo: SavedVideo = {
-        id: uniqueId,
-        name: formData.name,
-        theme: formData.theme,
-        aspect: formData.aspect,
-        videoUrl: url,
-        createdAt: new Date(),
-        fileName: `newspaper-animation-${formData.name}.mp4`
-      };
-      
-      setSavedVideos(prev => [newVideo, ...prev]);
-    }
+    toast({
+      title: 'Success!',
+      description: 'Your newspaper animation video has been generated. Download it to save it permanently.',
+    });
   };
 
   const handleProgress = (progress: number) => {
@@ -276,223 +144,11 @@ export default function NewspaperSpinPage() {
     }
   };
 
-  const handleDownloadSaved = (video: SavedVideo) => {
-    try {
-      // Handle Cloudinary URLs
-      if (video.videoUrl && video.videoUrl.includes('cloudinary.com')) {
-        const link = document.createElement('a');
-        link.href = video.videoUrl;
-        const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (video.videoUrl && video.videoUrl.startsWith('blob:')) {
-        // Handle blob URLs (current format)
-        const link = document.createElement('a');
-        link.href = video.videoUrl;
-        const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (video.videoUrl && video.videoUrl.startsWith('data:video/')) {
-        // Handle legacy base64 data
-        fetch(video.videoUrl)
-          .then(res => res.blob())
-          .then(blob => {
-            const mp4Blob = new Blob([blob], { type: 'video/mp4' });
-            const url = URL.createObjectURL(mp4Blob);
-            const link = document.createElement('a');
-            link.href = url;
-            const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-          })
-          .catch(error => {
-            console.error('Error downloading video:', error);
-            toast({
-              title: 'Download Error',
-              description: 'Failed to download video',
-              variant: 'destructive',
-            });
-          });
-      } else {
-        toast({
-          title: 'Download Error',
-          description: 'Video data not available',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error downloading video:', error);
-      toast({
-        title: 'Download Error',
-        description: 'Failed to download video',
-        variant: 'destructive',
-      });
-    }
-  };
 
-  const handleDeleteSaved = async (videoId: string) => {
-    // Find the video to get its Cloudinary ID
-    const videoToDelete = savedVideos.find(video => video.id === videoId);
-    
-    // Delete from Cloudinary if it has a cloudinaryId
-    if (videoToDelete?.cloudinaryId) {
-      try {
-        const response = await fetch(`/api/upload-video?public_id=${videoToDelete.cloudinaryId}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          console.warn('Failed to delete from Cloudinary, but continuing with local deletion');
-        }
-      } catch (error) {
-        console.error('Error deleting from Cloudinary:', error);
-      }
-    }
-    
-    setSavedVideos(prev => prev.filter(video => video.id !== videoId));
-    
-    // Update localStorage
-    const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
-    const updatedVideos = existingVideos.filter((video: SavedVideo) => video.id !== videoId);
-    localStorage.setItem('newspaperSpinVideos', JSON.stringify(updatedVideos));
-    
-    toast({
-      title: 'Video Deleted',
-      description: 'The video has been removed from your collection',
-    });
-  };
 
-  const clearAllVideos = async () => {
-    // Delete all videos from Cloudinary
-    const videosToDelete = savedVideos.filter(video => video.cloudinaryId);
-    
-    for (const video of videosToDelete) {
-      if (video.cloudinaryId) {
-        try {
-          await fetch(`/api/upload-video?public_id=${video.cloudinaryId}`, {
-            method: 'DELETE',
-          });
-        } catch (error) {
-          console.error('Error deleting video from Cloudinary:', error);
-        }
-      }
-    }
-    
-    setSavedVideos([]);
-    localStorage.removeItem('newspaperSpinVideos');
-    
-    // Clear all sessionStorage to free up quota
-    try {
-      sessionStorage.clear();
-    } catch (error) {
-      console.warn('Error clearing sessionStorage:', error);
-    }
-    
-    toast({
-      title: 'All Videos Cleared',
-      description: 'All saved videos have been removed from cloud and local storage',
-    });
-  };
 
-  // Load saved videos on component mount
-  React.useEffect(() => {
-    const loadVideos = async () => {
-      // Wait for user to be loaded
-      if (!isLoaded) return;
-      
-      // If user is not authenticated, clear videos
-      if (!user?.id) {
-        setSavedVideos([]);
-        return;
-      }
-      
-      try {
-        const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
-        
-        // Convert createdAt strings back to Date objects and filter valid videos
-        const validVideos = existingVideos
-          .filter((video: any) => video && video.id && video.name)
-          .map((video: any) => ({
-            ...video,
-            createdAt: new Date(video.createdAt)
-          }));
-        
-        // Filter videos by current user ID
-        const userVideos = validVideos.filter((video: SavedVideo) => 
-          video.userId === user.id
-        );
-        
-        // Remove duplicates based on name, theme, and aspect
-        const uniqueVideos = userVideos.filter((video: SavedVideo, index: number, self: SavedVideo[]) => 
-          index === self.findIndex((v: SavedVideo) => 
-            v.name === video.name && 
-            v.theme === video.theme && 
-            v.aspect === video.aspect
-          )
-        );
-        
-        console.log('Loaded videos for user:', user.id, 'Count:', uniqueVideos.length);
-        setSavedVideos(uniqueVideos);
-        
-        // Update localStorage with cleaned videos if needed
-        if (uniqueVideos.length !== existingVideos.length) {
-          localStorage.setItem('newspaperSpinVideos', JSON.stringify(uniqueVideos));
-        }
-        
-        // Clean up any old sessionStorage data
-        try {
-          const keys = Object.keys(sessionStorage);
-          keys.forEach(key => {
-            if (key.startsWith('video_')) {
-              sessionStorage.removeItem(key);
-            }
-          });
-        } catch (error) {
-          console.warn('Error cleaning up sessionStorage:', error);
-        }
-      } catch (error) {
-        console.error('Error loading saved videos:', error);
-        setSavedVideos([]);
-      }
-    };
-    
-    loadVideos();
-  }, [user?.id, isLoaded]);
 
-  // Show loading state while user is being loaded
-  if (!isLoaded) {
-    return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </div>
-    );
-  }
 
-  // Show sign-in prompt if user is not authenticated
-  if (!user) {
-    return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="text-center py-12">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline mb-4">Newspaper Animator</h1>
-          <p className="text-muted-foreground mb-6">
-            Please sign in to create and manage your newspaper animation videos.
-          </p>
-          <Button asChild>
-            <a href="/sign-in">Sign In</a>
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -780,90 +436,7 @@ export default function NewspaperSpinPage() {
 
 
 
-        {/* Saved Videos Section */}
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight font-headline">Your Generated Animations</h2>
-            {savedVideos.length > 0 && (
-              <Button
-                onClick={clearAllVideos}
-                variant="outline"
-                size="sm"
-                className="text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear All
-              </Button>
-            )}
-          </div>
-          {savedVideos.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {savedVideos.map((video) => {
-                if (!video || !video.id) return null;
-                return (
-                  <Card key={video.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="relative aspect-video bg-black">
-                        {video.videoUrl ? (
-                          <video
-                            src={video.videoUrl}
-                            controls
-                            className="w-full h-full"
-                            onError={(e) => {
-                              console.error('Video load error:', e);
-                              // Remove corrupted video
-                              handleDeleteSaved(video.id);
-                            }}
-                          >
-                            Your browser does not support the video tag.
-                          </video>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white">
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">⚠️</div>
-                              <p className="text-sm">Video not available</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-sm">{video.name}</h3>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleDownloadSaved(video)}
-                              variant="outline"
-                              size="sm"
-                            >
-                              <Download className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteSaved(video.id)}
-                              variant="outline"
-                              size="sm"
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{video.theme} • {video.aspect}</span>
-                          <span>{video.createdAt ? video.createdAt.toLocaleDateString() : 'Unknown date'}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Newspaper className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-muted-foreground">No saved videos yet. Generate your first animation!</p>
-            </div>
-          )}
-        </div>
+
 
         {/* Features Section */}
         <div className="mt-8">
