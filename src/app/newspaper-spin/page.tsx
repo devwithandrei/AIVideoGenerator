@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,9 +39,11 @@ interface SavedVideo {
   cloudinaryId?: string; // Cloudinary public_id
   createdAt: Date;
   fileName: string;
+  userId?: string; // User ID for filtering
 }
 
 export default function NewspaperSpinPage() {
+  const { user, isLoaded } = useUser();
   const [formData, setFormData] = useState<GenerateRequest>({
     name: '',
     theme: 'light',
@@ -63,19 +66,20 @@ export default function NewspaperSpinPage() {
     
     try {
       // Upload to Cloudinary
-      const formData = new FormData();
-      formData.append('video', blob, `newspaper-animation-${formData.name}.mp4`);
-      formData.append('metadata', JSON.stringify({
+      const uploadFormData = new FormData();
+      uploadFormData.append('video', blob, `newspaper-animation-${formData.name}.mp4`);
+      uploadFormData.append('metadata', JSON.stringify({
         name: formData.name,
         theme: formData.theme,
         aspect: formData.aspect,
         effectType,
         duration: formData.duration,
+        userId: user?.id,
       }));
 
       const response = await fetch('/api/upload-video', {
         method: 'POST',
-        body: formData,
+        body: uploadFormData,
       });
 
       if (!response.ok) {
@@ -97,7 +101,8 @@ export default function NewspaperSpinPage() {
           videoUrl: result.video.url, // Use Cloudinary URL
           cloudinaryId: result.video.public_id, // Store Cloudinary ID
           createdAt: new Date(),
-          fileName: `newspaper-animation-${formData.name}.mp4`
+          fileName: `newspaper-animation-${formData.name}.mp4`,
+          userId: user?.id, // Store user ID
         };
         
         // Check if video with same name and settings already exists
@@ -363,7 +368,22 @@ export default function NewspaperSpinPage() {
     });
   };
 
-  const clearAllVideos = () => {
+  const clearAllVideos = async () => {
+    // Delete all videos from Cloudinary
+    const videosToDelete = savedVideos.filter(video => video.cloudinaryId);
+    
+    for (const video of videosToDelete) {
+      if (video.cloudinaryId) {
+        try {
+          await fetch(`/api/upload-video?public_id=${video.cloudinaryId}`, {
+            method: 'DELETE',
+          });
+        } catch (error) {
+          console.error('Error deleting video from Cloudinary:', error);
+        }
+      }
+    }
+    
     setSavedVideos([]);
     localStorage.removeItem('newspaperSpinVideos');
     
@@ -376,13 +396,15 @@ export default function NewspaperSpinPage() {
     
     toast({
       title: 'All Videos Cleared',
-      description: 'All saved videos have been removed and storage cleared',
+      description: 'All saved videos have been removed from cloud and local storage',
     });
   };
 
   // Load saved videos on component mount
   React.useEffect(() => {
     const loadVideos = async () => {
+      if (!user?.id) return; // Don't load videos if user is not authenticated
+      
       try {
         const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
         
@@ -394,8 +416,13 @@ export default function NewspaperSpinPage() {
             createdAt: new Date(video.createdAt)
           }));
         
+        // Filter videos by current user ID
+        const userVideos = validVideos.filter((video: SavedVideo) => 
+          video.userId === user.id
+        );
+        
         // Remove duplicates based on name, theme, and aspect
-        const uniqueVideos = validVideos.filter((video: SavedVideo, index: number, self: SavedVideo[]) => 
+        const uniqueVideos = userVideos.filter((video: SavedVideo, index: number, self: SavedVideo[]) => 
           index === self.findIndex((v: SavedVideo) => 
             v.name === video.name && 
             v.theme === video.theme && 
@@ -428,7 +455,35 @@ export default function NewspaperSpinPage() {
     };
     
     loadVideos();
-  }, []);
+  }, [user?.id]);
+
+  // Show loading state while user is being loaded
+  if (!isLoaded) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="text-center py-12">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline mb-4">Newspaper Animator</h1>
+          <p className="text-muted-foreground mb-6">
+            Please sign in to create and manage your newspaper animation videos.
+          </p>
+          <Button asChild>
+            <a href="/sign-in">Sign In</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
