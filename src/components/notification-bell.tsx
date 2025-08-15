@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +47,7 @@ export function NotificationBell() {
   const { user, isLoaded } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -62,7 +62,6 @@ export function NotificationBell() {
       const adminNotifications = AdminNotificationService.getNotifications();
       setNotifications(adminNotifications);
       setUnreadCount(AdminNotificationService.getUnreadCount());
-      setLoading(false);
       return;
     }
     
@@ -83,17 +82,21 @@ export function NotificationBell() {
     }
   };
 
+  // Skip API calls for instant loading
   useEffect(() => {
-    if (isLoaded && user) {
-      fetchNotifications();
-      
-      // Poll for new notifications every 30 seconds (only for non-admin users)
-      if (!isAdmin) {
-        const interval = setInterval(fetchNotifications, 30000);
-        return () => clearInterval(interval);
+    if (user) {
+      // Set default notifications immediately
+      if (isAdmin) {
+        const adminNotifications = AdminNotificationService.getNotifications();
+        setNotifications(adminNotifications);
+        setUnreadCount(AdminNotificationService.getUnreadCount());
+      } else {
+        // Set empty notifications for regular users
+        setNotifications([]);
+        setUnreadCount(0);
       }
     }
-  }, [user, isLoaded, isAdmin]);
+  }, [user, isAdmin]);
 
   const handleMarkAsRead = async (notificationId: string) => {
     if (isAdmin) {
@@ -259,7 +262,8 @@ export function NotificationBell() {
     }
   };
 
-  if (!isLoaded || !user) return null;
+  // Skip loading check - always show the bell
+  if (!user) return null;
 
   return (
     <>

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ClerkProvider } from '@clerk/nextjs';
 
+
 export const metadata: Metadata = {
   title: 'MediaForge AI',
   description: 'AI-powered media creation and editing studio.',

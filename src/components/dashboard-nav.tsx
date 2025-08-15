@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { LayoutDashboard, Clapperboard, ImageIcon, Map, CreditCard, Film, Shield, Home } from "lucide-react";
+import { LayoutDashboard, Clapperboard, ImageIcon, Map, CreditCard, Film, Shield, Home, Newspaper } from "lucide-react";
 import { getAdminEmailsForClient } from "@/lib/admin";
 
 const baseNavItems = [
@@ -13,6 +13,7 @@ const baseNavItems = [
   { href: "/dashboard/video-editor", label: "Video Editor", icon: <Film /> },
   { href: "/dashboard/image-editor", label: "Image Editor", icon: <ImageIcon /> },
   { href: "/dashboard/map-animation", label: "Map Animation", icon: <Map /> },
+  { href: "/newspaper-spin", label: "Newspaper Animator", icon: <Newspaper /> },
   { href: "/dashboard/billing", label: "Billing", icon: <CreditCard /> },
 ];
 

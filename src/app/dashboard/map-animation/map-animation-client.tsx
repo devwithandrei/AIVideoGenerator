@@ -29,6 +29,7 @@ import { Loader2, Upload, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { generateMapAnimation } from "@/ai/flows/generate-map-animation";
 import { generateMapAnimationFromImage } from "@/ai/flows/generate-map-animation-from-image";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MapAnimator } from "@/components/MapAnimator";
 
 const promptFormSchema = z.object({
   prompt: z.string().min(10, {
@@ -164,9 +165,10 @@ export function MapAnimationClient() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="prompt" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="prompt">Map Animation</TabsTrigger>
           <TabsTrigger value="image">Image to Animation</TabsTrigger>
+          <TabsTrigger value="animator">Map Animator</TabsTrigger>
         </TabsList>
         
         <TabsContent value="prompt">
@@ -544,6 +546,10 @@ export function MapAnimationClient() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="animator">
+          <MapAnimator />
         </TabsContent>
       </Tabs>
     </div>

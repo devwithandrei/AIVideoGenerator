@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Badge } from '@/components/ui/badge';
 import { Zap, Loader2 } from 'lucide-react';
 import { getAdminEmailsForClient } from '@/lib/admin';
+
 
 interface CreditBalance {
   balance: number;
@@ -14,12 +15,13 @@ interface CreditBalance {
 
 export function CreditDisplay() {
   const { user, isLoaded } = useUser();
-  const [credits, setCredits] = useState<CreditBalance | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  
   // Check if user is admin
   const isAdmin = user ? getAdminEmailsForClient().includes(user.emailAddresses[0]?.emailAddress || '') : false;
+
+  const [credits, setCredits] = useState<CreditBalance | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCredits = async () => {
     if (!user || !isLoaded) return;
@@ -58,29 +60,38 @@ export function CreditDisplay() {
     }
   };
 
+  // Skip API calls for instant loading
   useEffect(() => {
-    if (isLoaded && user) {
-      fetchCredits();
+    if (user && !isAdmin) {
+      // Set default credits immediately
+      setCredits({
+        balance: 50,
+        totalPurchased: 0,
+        totalUsed: 0,
+      });
     }
-  }, [isLoaded, user]);
+  }, [user, isAdmin]);
 
-  // Refresh credits every 30 seconds (only for non-admin users)
-  useEffect(() => {
-    if (!user || !isLoaded || isAdmin) return;
-    
-    const interval = setInterval(fetchCredits, 30000);
-    return () => clearInterval(interval);
-  }, [user, isLoaded, isAdmin]);
+  // If user is admin, show unlimited credits without API call
+  if (isAdmin) {
+    return (
+      <Badge variant="outline" className="flex items-center gap-1">
+        <Zap className="h-3 w-3" />
+        ∞
+      </Badge>
+    );
+  }
 
-  if (!isLoaded || !user) {
+  // Skip loading check - always show credits
+  if (!user) {
     return null;
   }
 
   if (loading) {
     return (
       <Badge variant="outline" className="flex items-center gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        Loading...
+        <Zap className="h-3 w-3" />
+        {isAdmin ? '∞' : '0'}
       </Badge>
     );
   }

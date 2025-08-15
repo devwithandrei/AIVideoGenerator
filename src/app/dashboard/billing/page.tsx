@@ -14,6 +14,7 @@ import {
 import { CreditPurchase } from "@/components/credit-purchase";
 import { CreditDisplay } from "@/components/credit-display";
 import { toast } from "@/hooks/use-toast";
+import { Loading } from "@/components/ui/loading";
 
 interface CreditBalance {
   balance: number;
@@ -65,7 +66,12 @@ export default function BillingPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <Loading 
+            title="Loading Credits"
+            subtitle="Fetching your credit information..."
+            size="md"
+            showDots={true}
+          />
         </div>
       </div>
     );
