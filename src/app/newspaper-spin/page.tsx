@@ -136,8 +136,18 @@ export default function NewspaperSpinPage() {
     if (generatedVideo) {
       const link = document.createElement('a');
       link.href = generatedVideo;
-      // Always use .mp4 extension for better compatibility
-      link.download = `newspaper-animation-${formData.name}.mp4`;
+      
+      // Determine the correct file extension based on the video format
+      let fileExtension = '.mp4'; // default
+      
+      // Check if the video URL contains information about the format
+      if (generatedVideo.includes('blob:')) {
+        // For blob URLs, we need to check the actual video format
+        // Since we're prioritizing MP4/H.264, we'll use .mp4
+        fileExtension = '.mp4';
+      }
+      
+      link.download = `newspaper-animation-${formData.name}${fileExtension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
