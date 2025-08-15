@@ -35,6 +35,7 @@ interface SavedVideo {
   theme: 'light' | 'dark';
   aspect: 'landscape' | 'vertical';
   videoUrl: string;
+  cloudinaryId?: string; // Cloudinary public_id
   createdAt: Date;
   fileName: string;
 }
@@ -60,77 +61,126 @@ export default function NewspaperSpinPage() {
     setGeneratedVideo(url);
     setIsGenerating(false);
     
-    // Create unique ID with timestamp and random number to prevent duplicates
-    const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Save the video to the collection with direct blob URL
-    const newVideo: SavedVideo = {
-      id: uniqueId,
-      name: formData.name,
-      theme: formData.theme,
-      aspect: formData.aspect,
-      videoUrl: url, // Store the blob URL directly
-      createdAt: new Date(),
-      fileName: `newspaper-animation-${formData.name}.mp4`
-    };
-    
-    // Check if video with same name and settings already exists
-    setSavedVideos(prev => {
-      const existingVideo = prev.find(video => 
-        video.name === newVideo.name && 
-        video.theme === newVideo.theme && 
-        video.aspect === newVideo.aspect
-      );
-      
-      if (existingVideo) {
-        // Replace the existing video instead of adding duplicate
-        return prev.map(video => 
-          video.id === existingVideo.id ? newVideo : video
-        );
-      } else {
-        // Add new video
-        return [newVideo, ...prev];
-      }
-    });
-    
-    // Update localStorage with metadata only (no blob data)
     try {
-      const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
-      const existingVideoIndex = existingVideos.findIndex((video: SavedVideo) => 
-        video.name === newVideo.name && 
-        video.theme === newVideo.theme && 
-        video.aspect === newVideo.aspect
-      );
+      // Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('video', blob, `newspaper-animation-${formData.name}.mp4`);
+      formData.append('metadata', JSON.stringify({
+        name: formData.name,
+        theme: formData.theme,
+        aspect: formData.aspect,
+        effectType,
+        duration: formData.duration,
+      }));
+
+      const response = await fetch('/api/upload-video', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload to Cloudinary');
+      }
+
+      const result = await response.json();
       
-      if (existingVideoIndex !== -1) {
-        // Replace existing video
-        existingVideos[existingVideoIndex] = {
-          ...newVideo,
-          videoUrl: `blob:${uniqueId}` // Store reference for localStorage
+      if (result.success) {
+        // Create unique ID
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Save the video to the collection with Cloudinary URL
+        const newVideo: SavedVideo = {
+          id: uniqueId,
+          name: formData.name,
+          theme: formData.theme,
+          aspect: formData.aspect,
+          videoUrl: result.video.url, // Use Cloudinary URL
+          cloudinaryId: result.video.public_id, // Store Cloudinary ID
+          createdAt: new Date(),
+          fileName: `newspaper-animation-${formData.name}.mp4`
         };
-      } else {
-        // Add new video
-        existingVideos.unshift({
-          ...newVideo,
-          videoUrl: `blob:${uniqueId}` // Store reference for localStorage
+        
+        // Check if video with same name and settings already exists
+        setSavedVideos(prev => {
+          const existingVideo = prev.find(video => 
+            video.name === newVideo.name && 
+            video.theme === newVideo.theme && 
+            video.aspect === newVideo.aspect
+          );
+          
+          if (existingVideo) {
+            // Replace the existing video instead of adding duplicate
+            return prev.map(video => 
+              video.id === existingVideo.id ? newVideo : video
+            );
+          } else {
+            // Add new video
+            return [newVideo, ...prev];
+          }
         });
+        
+        // Update localStorage with metadata only
+        try {
+          const existingVideos = JSON.parse(localStorage.getItem('newspaperSpinVideos') || '[]');
+          const existingVideoIndex = existingVideos.findIndex((video: SavedVideo) => 
+            video.name === newVideo.name && 
+            video.theme === newVideo.theme && 
+            video.aspect === newVideo.aspect
+          );
+          
+          if (existingVideoIndex !== -1) {
+            // Replace existing video
+            existingVideos[existingVideoIndex] = {
+              ...newVideo,
+              videoUrl: result.video.url // Store Cloudinary URL
+            };
+          } else {
+            // Add new video
+            existingVideos.unshift({
+              ...newVideo,
+              videoUrl: result.video.url // Store Cloudinary URL
+            });
+          }
+          
+          // Limit to 20 videos to prevent storage issues
+          if (existingVideos.length > 20) {
+            existingVideos.splice(20);
+          }
+          
+          localStorage.setItem('newspaperSpinVideos', JSON.stringify(existingVideos));
+        } catch (error) {
+          console.error('Error saving to localStorage:', error);
+        }
+        
+        toast({
+          title: 'Success!',
+          description: 'Your newspaper animation video has been generated and saved to the cloud',
+        });
+      } else {
+        throw new Error(result.error || 'Upload failed');
       }
-      
-      // Limit to 20 videos to prevent storage issues
-      if (existingVideos.length > 20) {
-        existingVideos.splice(20);
-      }
-      
-      localStorage.setItem('newspaperSpinVideos', JSON.stringify(existingVideos));
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
-      // If localStorage fails, just keep in memory
+      console.error('Error uploading to Cloudinary:', error);
+      toast({
+        title: 'Upload Error',
+        description: 'Video generated but failed to save to cloud. It will be available temporarily.',
+        variant: 'destructive',
+      });
+      
+      // Fallback: save locally with blob URL
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newVideo: SavedVideo = {
+        id: uniqueId,
+        name: formData.name,
+        theme: formData.theme,
+        aspect: formData.aspect,
+        videoUrl: url,
+        createdAt: new Date(),
+        fileName: `newspaper-animation-${formData.name}.mp4`
+      };
+      
+      setSavedVideos(prev => [newVideo, ...prev]);
     }
-    
-    toast({
-      title: 'Success!',
-      description: 'Your newspaper animation video has been generated and saved',
-    });
   };
 
   const handleProgress = (progress: number) => {
@@ -222,8 +272,8 @@ export default function NewspaperSpinPage() {
 
   const handleDownloadSaved = (video: SavedVideo) => {
     try {
-      // Handle blob URLs (current format)
-      if (video.videoUrl && video.videoUrl.startsWith('blob:')) {
+      // Handle Cloudinary URLs
+      if (video.videoUrl && video.videoUrl.includes('cloudinary.com')) {
         const link = document.createElement('a');
         link.href = video.videoUrl;
         const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
@@ -231,38 +281,45 @@ export default function NewspaperSpinPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } else {
+      } else if (video.videoUrl && video.videoUrl.startsWith('blob:')) {
+        // Handle blob URLs (current format)
+        const link = document.createElement('a');
+        link.href = video.videoUrl;
+        const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else if (video.videoUrl && video.videoUrl.startsWith('data:video/')) {
         // Handle legacy base64 data
-        if (video.videoUrl && video.videoUrl.startsWith('data:video/')) {
-          fetch(video.videoUrl)
-            .then(res => res.blob())
-            .then(blob => {
-              const mp4Blob = new Blob([blob], { type: 'video/mp4' });
-              const url = URL.createObjectURL(mp4Blob);
-              const link = document.createElement('a');
-              link.href = url;
-              const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
-              link.download = fileName;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              URL.revokeObjectURL(url);
-            })
-            .catch(error => {
-              console.error('Error downloading video:', error);
-              toast({
-                title: 'Download Error',
-                description: 'Failed to download video',
-                variant: 'destructive',
-              });
+        fetch(video.videoUrl)
+          .then(res => res.blob())
+          .then(blob => {
+            const mp4Blob = new Blob([blob], { type: 'video/mp4' });
+            const url = URL.createObjectURL(mp4Blob);
+            const link = document.createElement('a');
+            link.href = url;
+            const fileName = video.fileName.endsWith('.mp4') ? video.fileName : `${video.fileName}.mp4`;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          })
+          .catch(error => {
+            console.error('Error downloading video:', error);
+            toast({
+              title: 'Download Error',
+              description: 'Failed to download video',
+              variant: 'destructive',
             });
-        } else {
-          toast({
-            title: 'Download Error',
-            description: 'Video data not available',
-            variant: 'destructive',
           });
-        }
+      } else {
+        toast({
+          title: 'Download Error',
+          description: 'Video data not available',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error downloading video:', error);
@@ -274,7 +331,25 @@ export default function NewspaperSpinPage() {
     }
   };
 
-  const handleDeleteSaved = (videoId: string) => {
+  const handleDeleteSaved = async (videoId: string) => {
+    // Find the video to get its Cloudinary ID
+    const videoToDelete = savedVideos.find(video => video.id === videoId);
+    
+    // Delete from Cloudinary if it has a cloudinaryId
+    if (videoToDelete?.cloudinaryId) {
+      try {
+        const response = await fetch(`/api/upload-video?public_id=${videoToDelete.cloudinaryId}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          console.warn('Failed to delete from Cloudinary, but continuing with local deletion');
+        }
+      } catch (error) {
+        console.error('Error deleting from Cloudinary:', error);
+      }
+    }
+    
     setSavedVideos(prev => prev.filter(video => video.id !== videoId));
     
     // Update localStorage
