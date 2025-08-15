@@ -4,10 +4,10 @@
   "description": "Remotion project for Newspaper Animator video rendering",
   "main": "index.js",
   "scripts": {
-    "start": "remotion preview src/index.ts",
+    "start": "remotion preview src/index.ts --no-open",
     "build": "remotion bundle src/index.ts",
     "render": "remotion render src/index.ts NewspaperSpin out/video.mp4",
-    "preview": "remotion preview src/index.ts",
+    "preview": "remotion preview src/index.ts --no-open",
     "upgrade": "remotion upgrade",
     "test": "eslint src --ext ts,tsx,js,jsx && tsc"
   },
