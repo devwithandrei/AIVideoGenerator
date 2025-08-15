@@ -8,6 +8,9 @@
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
+    "build:next": "next build",
+    "build:remotion": "cd newspaper-remotion && npm run build",
+    "build:all": "concurrently \"next build\" \"cd newspaper-remotion && npm run build\"",
     "start": "concurrently \"next start -p 9002\" \"cd newspaper-remotion && npm run preview\"",
     "start:next": "next start -p 9002",
     "lint": "next lint",
@@ -23,7 +26,10 @@
     "performance": "npm run build && npm run start",
     "remotion:preview": "cd newspaper-remotion && npm run preview",
     "remotion:render": "cd newspaper-remotion && npm run render",
-    "remotion:build": "cd newspaper-remotion && npm run build"
+    "remotion:build": "cd newspaper-remotion && npm run build",
+    "install:all": "npm install && cd newspaper-remotion && npm install",
+    "clean": "rm -rf .next out newspaper-remotion/out newspaper-remotion/.cache",
+    "clean:all": "npm run clean && rm -rf node_modules newspaper-remotion/node_modules"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",

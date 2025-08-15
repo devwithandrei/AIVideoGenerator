@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "remotion preview src/index.ts",
-    "build": "remotion render src/index.ts NewspaperSpin out/video.mp4",
+    "build": "remotion bundle src/index.ts",
     "render": "remotion render src/index.ts NewspaperSpin out/video.mp4",
     "preview": "remotion preview src/index.ts",
     "upgrade": "remotion upgrade",
