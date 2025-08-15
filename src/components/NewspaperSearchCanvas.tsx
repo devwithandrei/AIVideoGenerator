@@ -275,12 +275,14 @@ export const NewspaperSearchCanvas: React.FC<NewspaperSearchCanvasProps> = ({
       // Create a MediaRecorder to capture the animation
       const stream = canvas.captureStream(fps);
       
-      // Check available MIME types
+      // Check available MIME types - prioritize MP4/H.264 for better compatibility
       const mimeTypes = [
+        'video/mp4;codecs=h264',
+        'video/mp4',
+        'video/webm;codecs=h264',
         'video/webm;codecs=vp9',
         'video/webm;codecs=vp8',
-        'video/webm',
-        'video/mp4'
+        'video/webm'
       ];
       
       let selectedMimeType = null;
@@ -297,7 +299,8 @@ export const NewspaperSearchCanvas: React.FC<NewspaperSearchCanvasProps> = ({
       
       console.log('Using MIME type:', selectedMimeType);
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: selectedMimeType
+        mimeType: selectedMimeType,
+        videoBitsPerSecond: 5000000 // 5 Mbps for good quality
       });
 
       const chunks: Blob[] = [];
