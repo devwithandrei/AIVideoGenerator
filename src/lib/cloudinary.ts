@@ -23,7 +23,7 @@ export class CloudinaryService {
    * Upload a video to Cloudinary
    */
   static async uploadVideo(
-    file: File | Blob,
+    file: File | Blob | Buffer,
     options: {
       folder?: string;
       public_id?: string;
@@ -31,9 +31,6 @@ export class CloudinaryService {
     } = {}
   ): Promise<CloudinaryUploadResult> {
     try {
-      // Convert file to base64 for Cloudinary upload
-      const base64Data = await this.fileToBase64(file);
-      
       const uploadOptions = {
         folder: options.folder || 'newspaper-animations',
         public_id: options.public_id,
@@ -56,7 +53,7 @@ export class CloudinaryService {
               reject(new Error('Upload failed - no result returned'));
             }
           }
-        ).end(base64Data);
+        ).end(file);
       });
     } catch (error) {
       console.error('Error uploading to Cloudinary:', error);
@@ -93,22 +90,7 @@ export class CloudinaryService {
     }
   }
 
-  /**
-   * Convert file to base64 for Cloudinary upload
-   */
-  private static async fileToBase64(file: File | Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove the data URL prefix (e.g., "data:video/mp4;base64,")
-        const base64 = result.split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
+
 
   /**
    * Generate a Cloudinary URL with transformations

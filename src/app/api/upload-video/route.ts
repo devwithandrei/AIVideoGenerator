@@ -22,8 +22,12 @@ export async function POST(request: NextRequest) {
     const randomId = Math.random().toString(36).substring(2, 15);
     const publicId = `newspaper-animation-${timestamp}-${randomId}`;
 
+    // Convert File to Buffer for server-side processing
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     // Upload to Cloudinary
-    const uploadResult = await CloudinaryService.uploadVideo(file, {
+    const uploadResult = await CloudinaryService.uploadVideo(buffer, {
       folder: 'newspaper-animations',
       public_id: publicId,
       resource_type: 'video',
