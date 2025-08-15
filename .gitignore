@@ -43,3 +43,36 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# Remotion
+newspaper-remotion/node_modules/
+newspaper-remotion/.cache/
+newspaper-remotion/out/
+newspaper-remotion/dist/
+
+# Generated videos
+public/videos/
+*.mp4
+*.webm
+*.gif
+
+# Cache files
+.cache/
+*.cache
+node_modules/.cache/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
