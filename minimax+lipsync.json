@@ -1,0 +1,33 @@
+{
+  "9001": {
+    "inputs": {
+      "prompt": "a cinematic shot of a golden retriever puppy running through a sunlit meadow with wildflowers, slow motion, shallow depth of field, soft golden hour bokeh, ultra-detailed fur, 4K",
+      "seed": 42,
+      "aspect_ratio": "16:9",
+      "resolution": "480p",
+      "duration_seconds": 5
+    },
+    "class_type": "ComfyCloudMiniMaxH3TextToVideoNode",
+    "_meta": {
+      "title": "MiniMax H3 Text → Video (official T2V node)"
+    }
+  },
+  "9002": {
+    "inputs": {
+      "images": [
+        "9001",
+        0
+      ],
+      "frame_rate": 24,
+      "loop_count": 0,
+      "filename_prefix": "AISNV_MiniMax_H3",
+      "format": "video/h264-mp4",
+      "pingpong": false,
+      "save_output": true
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Save MP4 Video"
+    }
+  }
+}
