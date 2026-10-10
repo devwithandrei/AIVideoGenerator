@@ -55,9 +55,14 @@ import {
   Pencil,
   Save,
   RotateCcw,
+  Clapperboard,
+  Plus,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getAdminEmailsForClient } from "@/lib/admin";
+import { FeatureIcon, FEATURE_ICON_NAMES } from "@/components/feature-icon";
 
 interface BillboardVideoData {
   id: string;
@@ -86,6 +91,8 @@ interface UserData {
   createdAt: string;
   lastSignInAt?: string;
   isActive: boolean;
+  isOnline: boolean;
+  lastSeenAt?: string;
   role: 'admin' | 'user';
   banned: boolean;
   emailVerified: boolean;
@@ -137,6 +144,7 @@ export default function AdminPanel() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'user'>('all');
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [, setClockTick] = useState(0);
 
   // Billboard state
   const [billboards, setBillboards] = useState<BillboardVideoData[]>([]);
@@ -167,6 +175,34 @@ export default function AdminPanel() {
   const [newBillboardSetDefault, setNewBillboardSetDefault] = useState(true);
   const [uploadingBillboard, setUploadingBillboard] = useState(false);
 
+  // Feature videos state (homepage feature cards: dynamic list)
+  interface FeatureItemData {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    videoUrl: string | null;
+    cloudinaryPublicId: string | null;
+    posterUrl: string | null;
+    durationSeconds: number | null;
+    displayOrder: number;
+    updatedAt: string;
+  }
+  const [features, setFeatures] = useState<FeatureItemData[]>([]);
+  const [featureLoading, setFeatureLoading] = useState(false);
+  const [featureBusyId, setFeatureBusyId] = useState<string | null>(null);
+  const [addingFeature, setAddingFeature] = useState(false);
+  const [newFeatureTitle, setNewFeatureTitle] = useState('');
+  const [newFeatureDescription, setNewFeatureDescription] = useState('');
+  const [newFeatureIcon, setNewFeatureIcon] = useState('Sparkles');
+  const [featureIcons, setFeatureIcons] = useState<string[]>([]);
+  const [editingFeatureId, setEditingFeatureId] = useState<string | null>(null);
+  const [featureEditDraft, setFeatureEditDraft] = useState<{ title: string; description: string; icon: string }>({
+    title: '',
+    description: '',
+    icon: 'Sparkles',
+  });
+
   // Admin check using environment variable
   const adminEmails = getAdminEmailsForClient();
   const isAdmin = user?.publicMetadata?.role === 'admin' || 
@@ -193,8 +229,70 @@ export default function AdminPanel() {
     if (isLoaded && isSignedIn && isAdmin) {
       loadUsers();
       loadBillboards();
+      loadFeatureVideos();
     }
   }, [isLoaded, isSignedIn, isAdmin, router]);
+
+  useEffect(() => {
+    let alive = true;
+    let lastPoll = 0;
+    const POLL_MS = 10000;
+
+    const refreshPresence = async () => {
+      if (!alive) return;
+      try {
+        const res = await fetch('/api/presence', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const ids: string[] = Array.isArray(data.onlineUserIds) ? data.onlineUserIds : [];
+        const lastSeenMap: Record<string, number> =
+          data.lastSeen && typeof data.lastSeen === 'object' ? data.lastSeen : {};
+        setUsers((prev) => {
+          let changed = false;
+          const next = prev.map((u) => {
+            const online = ids.includes(u.id);
+            const ls = lastSeenMap[u.id];
+            const lsIso = ls ? new Date(ls).toISOString() : undefined;
+            const lsChanged = !!lsIso !== !!u.lastSeenAt || (lsIso && u.lastSeenAt !== lsIso);
+            if (u.isOnline !== online || lsChanged) {
+              changed = true;
+              return { ...u, isOnline: online, lastSeenAt: lsIso ?? u.lastSeenAt };
+            }
+            return u;
+          });
+          return changed ? next : prev;
+        });
+      } catch (_) {}
+    };
+
+    const tick = () => {
+      if (!alive) return;
+      if (document.visibilityState === 'visible' && Date.now() - lastPoll >= POLL_MS) {
+        lastPoll = Date.now();
+        void refreshPresence();
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        lastPoll = Date.now();
+        void refreshPresence();
+      }
+    };
+
+    const id = window.setInterval(tick, 2000);
+    document.addEventListener('visibilitychange', onVisibility);
+    void refreshPresence();
+
+    const clockId = window.setInterval(() => setClockTick((t) => t + 1), 30000);
+
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+      window.clearInterval(clockId);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
 
   const loadBillboards = async () => {
     try {
@@ -404,6 +502,180 @@ export default function AdminPanel() {
     }
   };
 
+  const loadFeatureVideos = async () => {
+    try {
+      setFeatureLoading(true);
+      const res = await fetch('/api/admin/feature-videos', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+      if (Array.isArray(data.icons) && data.icons.length) setFeatureIcons(data.icons);
+    } catch (e: any) {
+      toast({ title: 'Failed to load features', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setFeatureLoading(false);
+    }
+  };
+
+  const addNewFeature = async () => {
+    if (!newFeatureTitle.trim()) {
+      toast({ title: 'Title is required', variant: 'destructive' });
+      return;
+    }
+    try {
+      setAddingFeature(true);
+      const res = await fetch('/api/admin/feature-videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newFeatureTitle.trim(),
+          description: newFeatureDescription.trim(),
+          icon: newFeatureIcon,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+      setNewFeatureTitle('');
+      setNewFeatureDescription('');
+      setNewFeatureIcon('Sparkles');
+      toast({ title: 'Feature added' });
+    } catch (e: any) {
+      toast({ title: 'Failed to add feature', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setAddingFeature(false);
+    }
+  };
+
+  const updateFeatureMeta = async (id: string, patch: { title?: string; description?: string; icon?: string; displayOrder?: number }) => {
+    try {
+      const res = await fetch('/api/admin/feature-videos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+    } catch (e: any) {
+      toast({ title: 'Update failed', description: String(e?.message || e), variant: 'destructive' });
+    }
+  };
+
+  const uploadFeatureVideo = async (id: string, file: File) => {
+    try {
+      setFeatureBusyId(id);
+      const fd = new FormData();
+      fd.append('id', id);
+      fd.append('video', file);
+      const res = await fetch('/api/admin/feature-videos', { method: 'PATCH', body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+      toast({ title: 'Feature video uploaded' });
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setFeatureBusyId(null);
+    }
+  };
+
+  const removeFeatureVideo = async (id: string) => {
+    try {
+      setFeatureBusyId(id);
+      const fd = new FormData();
+      fd.append('id', id);
+      fd.append('removeVideo', 'true');
+      const res = await fetch('/api/admin/feature-videos', { method: 'PATCH', body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+      toast({ title: 'Feature video removed' });
+    } catch (e: any) {
+      toast({ title: 'Remove failed', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setFeatureBusyId(null);
+    }
+  };
+
+  const deleteFeature = async (id: string) => {
+    try {
+      setFeatureBusyId(id);
+      const res = await fetch(`/api/admin/feature-videos?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+      toast({ title: 'Feature deleted' });
+    } catch (e: any) {
+      toast({ title: 'Delete failed', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setFeatureBusyId(null);
+    }
+  };
+
+  const moveFeature = async (id: string, direction: -1 | 1) => {
+    const idx = features.findIndex((f) => f.id === id);
+    if (idx < 0) return;
+    const target = idx + direction;
+    if (target < 0 || target >= features.length) return;
+    const ordered = [...features];
+    const [item] = ordered.splice(idx, 1);
+    ordered.splice(target, 0, item);
+    try {
+      const res = await fetch('/api/admin/feature-videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds: ordered.map((f) => f.id) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (Array.isArray(data.features)) setFeatures(data.features);
+    } catch (e: any) {
+      toast({ title: 'Reorder failed', description: String(e?.message || e), variant: 'destructive' });
+    }
+  };
+
+  const startFeatureEdit = (f: FeatureItemData) => {
+    setEditingFeatureId(f.id);
+    setFeatureEditDraft({ title: f.title, description: f.description, icon: f.icon });
+  };
+
+  const cancelFeatureEdit = () => {
+    setEditingFeatureId(null);
+    setFeatureEditDraft({ title: '', description: '', icon: 'Sparkles' });
+  };
+
+  const saveFeatureEdit = async (id: string) => {
+    if (!featureEditDraft.title.trim()) {
+      toast({ title: 'Title is required', variant: 'destructive' });
+      return;
+    }
+    await updateFeatureMeta(id, {
+      title: featureEditDraft.title.trim(),
+      description: featureEditDraft.description,
+      icon: featureEditDraft.icon,
+    });
+    cancelFeatureEdit();
+  };
+
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -541,6 +813,40 @@ export default function AdminPanel() {
     });
   };
 
+  const formatPreciseDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  const formatRelativeTime = (dateString?: string) => {
+    if (!dateString) return 'never';
+    const then = new Date(dateString).getTime();
+    if (Number.isNaN(then)) return 'never';
+    const diffMs = Date.now() - then;
+    if (diffMs < 0) return 'just now';
+    const sec = Math.floor(diffMs / 1000);
+    if (sec < 5) return 'just now';
+    if (sec < 60) return `${sec}s ago`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}d ago`;
+    const wk = Math.floor(day / 7);
+    if (wk < 5) return `${wk}w ago`;
+    const mo = Math.floor(day / 30);
+    if (mo < 12) return `${mo}mo ago`;
+    const yr = Math.floor(day / 365);
+    return `${yr}y ago`;
+  };
+
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -554,7 +860,7 @@ export default function AdminPanel() {
   const totalRevenue = users.reduce((sum, user) => 
     sum + user.purchases.filter(p => p.status === 'completed').reduce((pSum, p) => pSum + p.amount, 0), 0
   );
-  const activeUsers = users.filter(u => u.isActive && u.role === 'user').length;
+  const activeUsers = users.filter(u => u.isOnline).length;
 
   if (!isLoaded) {
     return (
@@ -592,7 +898,7 @@ export default function AdminPanel() {
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1 px-3 py-1">
               <Activity className="h-4 w-4" />
-              <span className="font-semibold">{activeUsers} Active</span>
+              <span className="font-semibold">{activeUsers} Online</span>
             </Badge>
           </div>
           <Button
@@ -654,16 +960,17 @@ export default function AdminPanel() {
           <CardContent>
             <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">{activeUsers}</div>
             <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-              {users.length > 0 ? Math.round((activeUsers / users.length) * 100) : 0}% of total
+              online now · {users.length > 0 ? Math.round((activeUsers / users.length) * 100) : 0}% of total
             </p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="users" className="w-full space-y-6">
-        <TabsList className="grid grid-cols-2 max-w-md">
+        <TabsList className="grid grid-cols-3 max-w-xl">
           <TabsTrigger value="users" className="gap-2"><Users className="h-4 w-4" /> Users</TabsTrigger>
           <TabsTrigger value="billboard" className="gap-2"><Film className="h-4 w-4" /> Billboard Videos</TabsTrigger>
+          <TabsTrigger value="features" className="gap-2"><Clapperboard className="h-4 w-4" /> Feature Videos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -787,9 +1094,20 @@ export default function AdminPanel() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                          {user.isActive ? 'Active' : 'Banned'}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge
+                            variant={user.banned ? 'destructive' : 'secondary'}
+                            className={!user.banned && user.isOnline ? 'bg-green-600 text-white hover:bg-green-700 border-transparent' : undefined}
+                            title={user.lastSeenAt ? `Last seen: ${formatPreciseDate(user.lastSeenAt)}` : undefined}
+                          >
+                            {user.banned ? 'Banned' : user.isOnline ? 'Online' : 'Offline'}
+                          </Badge>
+                          {!user.banned && (
+                            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                              {user.isOnline ? 'active now' : `last seen ${formatRelativeTime(user.lastSeenAt)}`}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -846,11 +1164,14 @@ export default function AdminPanel() {
                                       <CardContent className="space-y-2">
                                         <div><strong>Email:</strong> {user.email}</div>
                                         <div><strong>Role:</strong> {user.role}</div>
-                                        <div><strong>Status:</strong> {user.isActive ? 'Active' : 'Banned'}</div>
+                                        <div><strong>Status:</strong> {user.banned ? 'Banned' : user.isOnline ? 'Online' : 'Offline'}</div>
                                         <div><strong>Verified:</strong> {user.emailVerified ? 'Yes' : 'No'}</div>
                                         <div><strong>Joined:</strong> {formatDate(user.createdAt)}</div>
+                                        {user.lastSeenAt && (
+                                          <div><strong>Last Seen:</strong> {formatPreciseDate(user.lastSeenAt)} ({formatRelativeTime(user.lastSeenAt)})</div>
+                                        )}
                                         {user.lastSignInAt && (
-                                          <div><strong>Last Active:</strong> {formatDate(user.lastSignInAt)}</div>
+                                          <div><strong>Last Sign In:</strong> {formatDate(user.lastSignInAt)}</div>
                                         )}
                                       </CardContent>
                                     </Card>
@@ -1485,6 +1806,201 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="features">
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-2 flex flex-row items-start justify-between gap-3 flex-col sm:flex-row">
+            <div>
+              <CardTitle className="text-xl font-semibold flex items-center gap-2"><Clapperboard className="h-5 w-5" /> Homepage Features</CardTitle>
+              <p className="text-sm text-muted-foreground max-w-2xl">
+                Add, edit, reorder and remove the feature cards shown on the homepage. Each card can optionally play a video instead of an icon. Changes appear on the homepage automatically.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={loadFeatureVideos} disabled={featureLoading}>
+                <RefreshCw className={`h-4 w-4 ${featureLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button size="sm" onClick={() => setAddingFeature((v) => !v)}>
+                <Plus className="h-4 w-4" /> Add feature
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {addingFeature && (
+              <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 space-y-3">
+                <p className="text-sm font-semibold">New feature</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input
+                    placeholder="Feature title (e.g. AI Video Generation)"
+                    value={newFeatureTitle}
+                    onChange={(e) => setNewFeatureTitle(e.target.value)}
+                  />
+                  <select
+                    value={newFeatureIcon}
+                    onChange={(e) => setNewFeatureIcon(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {FEATURE_ICON_NAMES.map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  placeholder="Short description (shown under the title on the homepage)"
+                  value={newFeatureDescription}
+                  onChange={(e) => setNewFeatureDescription(e.target.value)}
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-muted-foreground">You can upload a video after creating the feature.</p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setAddingFeature(false)}>Cancel</Button>
+                    <Button size="sm" onClick={addNewFeature} disabled={addingFeature || !newFeatureTitle.trim()}>
+                      {addingFeature ? 'Adding…' : 'Add feature'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {features.length === 0 && !addingFeature ? (
+              <div className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">
+                <p className="text-sm">No features yet. Click <span className="font-medium text-foreground">Add feature</span> to create your first homepage feature card.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {features.map((f, idx) => {
+                  const isBusy = featureBusyId === f.id;
+                  const isEditing = editingFeatureId === f.id;
+                  const iconList = featureIcons.length ? featureIcons : [...FEATURE_ICON_NAMES];
+                  return (
+                    <div key={f.id} className="rounded-xl border p-4 bg-card/40 flex flex-col gap-3 overflow-hidden">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FeatureIcon name={f.icon} className="h-5 w-5 text-primary shrink-0" />
+                          {isEditing ? (
+                            <Input
+                              value={featureEditDraft.title}
+                              onChange={(e) => setFeatureEditDraft((d) => ({ ...d, title: e.target.value }))}
+                              className="h-8 py-1 text-sm font-semibold"
+                            />
+                          ) : (
+                            <p className="font-semibold text-sm truncate">{f.title}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveFeature(f.id, -1)} disabled={idx === 0 || isBusy}>
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveFeature(f.id, 1)} disabled={idx === features.length - 1 || isBusy}>
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <select
+                            value={featureEditDraft.icon}
+                            onChange={(e) => setFeatureEditDraft((d) => ({ ...d, icon: e.target.value }))}
+                            className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            {iconList.map((n) => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </select>
+                          <textarea
+                            value={featureEditDraft.description}
+                            onChange={(e) => setFeatureEditDraft((d) => ({ ...d, description: e.target.value }))}
+                            rows={2}
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-1.5 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button variant="outline" size="sm" onClick={cancelFeatureEdit} disabled={isBusy}>Cancel</Button>
+                            <Button size="sm" onClick={() => saveFeatureEdit(f.id)} disabled={isBusy || !featureEditDraft.title.trim()}>
+                              <Save className="h-3.5 w-3.5" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
+                          {f.description || <span className="italic">No description</span>}
+                        </p>
+                      )}
+
+                      <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black/40 border">
+                        {f.videoUrl ? (
+                          <video
+                            key={f.videoUrl}
+                            src={f.videoUrl}
+                            poster={f.posterUrl || undefined}
+                            muted
+                            loop
+                            playsInline
+                            autoPlay
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
+                            <FeatureIcon name={f.icon} className="h-8 w-8 opacity-40" />
+                            <p className="text-[11px]">No video</p>
+                          </div>
+                        )}
+                        <div className="absolute bottom-2 right-2 flex gap-1.5 flex-wrap justify-end">
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept="video/mp4,video/webm,video/quicktime"
+                              className="hidden"
+                              disabled={isBusy}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void uploadFeatureVideo(f.id, file);
+                                e.target.value = '';
+                              }}
+                            />
+                            <span className="inline-flex items-center gap-1 rounded-md bg-black/70 hover:bg-black/85 text-white text-[11px] px-2 py-1 transition-colors">
+                              <Upload className="h-3 w-3" /> {f.videoUrl ? (isBusy ? '…' : 'Replace') : (isBusy ? '…' : 'Upload')}
+                            </span>
+                          </label>
+                          {f.videoUrl && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => void removeFeatureVideo(f.id)}
+                              className="inline-flex items-center gap-1 rounded-md bg-amber-600/85 hover:bg-amber-700 text-white text-[11px] px-2 py-1 transition-colors disabled:opacity-50"
+                            >
+                              <X className="h-3 w-3" /> Remove video
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {f.videoUrl && f.durationSeconds
+                            ? `${Math.floor(f.durationSeconds / 60)}:${String(f.durationSeconds % 60).padStart(2, '0')} • `
+                            : ''}
+                          Updated {new Date(f.updatedAt).toLocaleString()}
+                        </p>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {!isEditing && (
+                            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => startFeatureEdit(f)} disabled={isBusy}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40" onClick={() => void deleteFeature(f.id)} disabled={isBusy}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </TabsContent>
       </Tabs>
       </div>

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ClerkProvider } from '@clerk/nextjs';
+import PresenceHeartbeat from '@/components/presence-heartbeat';
 
 
 export const metadata: Metadata = {
@@ -79,6 +80,7 @@ export default function RootLayout({
       </head>
       <body className={cn("font-body antialiased bg-background font-sans w-screen h-screen max-w-none overflow-hidden m-0 p-0")} suppressHydrationWarning>
         <ClerkProvider>
+          <PresenceHeartbeat />
           <SidebarProvider className="w-screen h-screen max-w-none max-h-none !overflow-x-hidden !overflow-y-auto min-h-0 m-0 p-0">
             <div className="w-screen h-screen max-w-none max-h-none m-0 p-0 !overflow-x-hidden overflow-y-auto">
               {children}

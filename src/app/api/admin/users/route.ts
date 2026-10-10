@@ -6,6 +6,7 @@ import { evaluateAdminAccess, getAdminEmails } from '@/lib/admin';
 import { db } from '@/lib/db';
 import { credits, creditTransactions, purchases, usageLogs } from '@/lib/db/schema';
 import { ensureDbSchemaInitialized } from '@/lib/db/auto-init';
+import { isOnline, getLastSeen } from '@/lib/presence';
 import { eq, desc, sql } from 'drizzle-orm';
 
 export async function GET() {
@@ -156,6 +157,11 @@ export async function GET() {
         createdAt: new Date(user.created_at).toISOString(),
         lastSignInAt: user.last_sign_in_at ? new Date(user.last_sign_in_at).toISOString() : undefined,
         isActive: !user.banned, // Clerk uses 'banned' field
+        isOnline: isOnline(user.id),
+        lastSeenAt: (() => {
+          const ls = getLastSeen(user.id);
+          return ls ? new Date(ls).toISOString() : undefined;
+        })(),
         role: isAdmin ? 'admin' : 'user',
         banned: user.banned || false,
         emailVerified: user.email_addresses?.[0]?.verification?.status === 'verified',

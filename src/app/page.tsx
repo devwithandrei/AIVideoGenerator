@@ -1,10 +1,9 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Clapperboard, Gem, ImageIcon, Map, Rocket } from "lucide-react"
 import { Header } from "@/components/header"
 import BillboardHero from "@/components/billboard-hero"
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs'
+import FeatureVideosSection from "@/components/feature-videos-section"
+import { SignedIn, SignedOut } from '@clerk/nextjs'
 
 export default function LandingPage() {
   return (
@@ -16,44 +15,7 @@ export default function LandingPage() {
         <BillboardHero />
       </div>
       <main className="flex-1">
-        <section id="features" className="w-full py-8 sm:py-12 md:py-24 lg:py-32 bg-card">
-          <div className="w-full max-w-none px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14">
-            <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-muted px-2 sm:px-3 py-1 text-xs sm:text-sm">Key Features</div>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter lg:text-5xl font-headline">
-                  Everything You Need to Create
-                </h2>
-                <p className="max-w-[900px] text-sm sm:text-base text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  From text prompts to polished final cuts, AISNV provides a seamless, powerful, and intuitive creation experience with realistic results.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-6 sm:gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 mt-8 sm:mt-12">
-              <div className="grid gap-1 text-center">
-                <Clapperboard className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-primary" />
-                <h3 className="text-base sm:text-lg font-bold font-headline">AI Video Generation</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Bring your ideas to life. Generate high-quality videos from simple text prompts in minutes.
-                </p>
-              </div>
-              <div className="grid gap-1 text-center">
-                <ImageIcon className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-primary" />
-                <h3 className="text-base sm:text-lg font-bold font-headline">AI Image Suite</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Create stunning visuals from text or enhance your existing images with our powerful AI editing tools.
-                </p>
-              </div>
-              <div className="grid gap-1 text-center">
-                <Map className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-primary" />
-                <h3 className="text-base sm:text-lg font-bold font-headline">Map Animations</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Generate beautiful, animated map routes for your travel vlogs and presentations automatically.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <FeatureVideosSection />
          <section className="w-full py-8 sm:py-12 md:py-24 lg:py-32">
           <div className="w-full max-w-none grid items-center justify-center gap-3 sm:gap-4 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14 text-center">
             <div className="space-y-2 sm:space-y-3">
