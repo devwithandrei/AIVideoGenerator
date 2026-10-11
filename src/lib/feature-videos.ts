@@ -254,10 +254,16 @@ export async function getFeatures(): Promise<FeatureItem[]> {
     flushToDisk(dbVal);
     return sortItems(dbVal);
   }
+  // DB is empty or unreachable. If disk/memory has data that isn't in DB yet
+  // (e.g. data was created while DB was down), sync it to DB so other
+  // environments (Vercel) can read it.
+  if (mem.length > 0) {
+    await writeToDb(mem);
+    return mem;
+  }
   // If DB is down and memory/disk are also empty, ship sensible defaults
   // so the homepage never renders a blank "Key Features" section.
-  if (mem.length === 0) return DEFAULT_FEATURES;
-  return mem;
+  return DEFAULT_FEATURES;
 }
 
 async function persist(next: FeatureItem[]): Promise<FeatureItem[]> {

@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import { neon } from '@neondatabase/serverless';
+import { neonConfig } from '@neondatabase/serverless';
 import * as schema from './schema';
 
 // Database connection string from environment variables
@@ -36,14 +36,19 @@ if (connectionString) {
   connectionString = sanitizeConnectionString(connectionString);
 }
 
-// Create the database client with error handling
-let sql: any = null;
+// Force Pool queries to use fetch (HTTP) instead of WebSocket, which is
+// required in serverless environments where WebSocket connections may fail.
+neonConfig.poolQueryViaFetch = true;
+
+// Create the database client with error handling.
+// drizzle's neon-serverless driver accepts a connection string directly and
+// creates a Pool internally. Passing the neon() tagged-template function is
+// incompatible (it has no .query() method).
 let db: any = null;
 
 try {
   if (connectionString) {
-    sql = neon(connectionString);
-    db = drizzle(sql, { schema });
+    db = drizzle(connectionString, { schema });
   }
 } catch (error) {
   console.error('Failed to initialize database connection:', error);

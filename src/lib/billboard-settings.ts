@@ -127,6 +127,16 @@ export async function getBillboardSettings(): Promise<BillboardSettings> {
     flushToDisk(dbVal);
     return dbVal;
   }
+  // DB is empty or unreachable. If memory has non-default settings, sync
+  // them to DB so other environments (Vercel) pick them up.
+  const isDefault =
+    mem.displayMode === DEFAULT_BILLBOARD_SETTINGS.displayMode &&
+    mem.autoLoop === DEFAULT_BILLBOARD_SETTINGS.autoLoop &&
+    mem.crossfadeMs === DEFAULT_BILLBOARD_SETTINGS.crossfadeMs &&
+    mem.backgroundLighting === DEFAULT_BILLBOARD_SETTINGS.backgroundLighting;
+  if (!isDefault) {
+    await writeToDb(mem);
+  }
   return mem;
 }
 
