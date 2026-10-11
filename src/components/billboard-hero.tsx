@@ -60,7 +60,7 @@ const FALLBACK = {
   headline: "MiniMax H3 AI Video Generator",
   subheadline:
     "AISNV delivers high-speed, cost-efficient image and video generation with realistic visuals and synchronized audio — powered by MiniMax H3. Try it for free.",
-  videoUrl: "/videos/HeroVideo.mp4",
+  videoUrl: undefined as string | undefined,
   posterUrl: undefined as string | undefined,
 };
 
@@ -322,8 +322,17 @@ export default function BillboardHero() {
   const videoLoopAttr = settings.displayMode === 'rotate' ? false : true;
 
   return (
-    <section className="relative w-screen max-w-none min-h-[100svh] flex items-end overflow-hidden m-0 p-0">
+    <section className="relative w-screen max-w-none min-h-[100svh] flex items-end overflow-hidden m-0 p-0 bg-[#0a0a0f]">
       <div className="absolute inset-0 -z-0 w-screen h-full m-0 p-0">
+        {/* Gradient fallback layer — visible when no video loads */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse at 30% 20%, rgba(249,115,22,0.18) 0%, transparent 55%), radial-gradient(ellipse at 75% 70%, rgba(56,189,248,0.12) 0%, transparent 50%), linear-gradient(135deg, #0a0a0f 0%, #13111c 45%, #0a0a0f 100%)',
+          }}
+        />
         {!loading || videoSrc ? (
           <video
             key={`${videoSrc}-${videoLoopAttr ? 'loop' : 'seq'}`}

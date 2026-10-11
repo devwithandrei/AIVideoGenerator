@@ -5,7 +5,9 @@ export const ONLINE_WINDOW_MS = 90_000;
 
 const stateDir = (): string | null => {
   try {
-    const d = join(process.cwd(), '.aisnv-state');
+    // On Vercel, process.cwd() is read-only; use /tmp for writable fallback.
+    const base = process.env.VERCEL ? '/tmp' : process.cwd();
+    const d = join(base, '.aisnv-state');
     if (!existsSync(d)) mkdirSync(d, { recursive: true });
     return d;
   } catch (_) {

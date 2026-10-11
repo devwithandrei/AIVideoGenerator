@@ -42,9 +42,50 @@ export const DEFAULT_FEATURE_ICONS = [
 
 const SETTINGS_KEY = 'feature.videos';
 
+const DEFAULT_FEATURES: FeatureItem[] = [
+  {
+    id: 'default-ai-video-generation',
+    title: 'AI Video Generation',
+    description: 'Bring your ideas to life. Generate high-quality videos from simple text prompts in minutes.',
+    icon: 'Clapperboard',
+    videoUrl: null,
+    cloudinaryPublicId: null,
+    posterUrl: null,
+    durationSeconds: null,
+    displayOrder: 0,
+    updatedAt: new Date(0).toISOString(),
+  },
+  {
+    id: 'default-ai-image-suite',
+    title: 'AI Image Suite',
+    description: 'Create stunning visuals from text or enhance your existing images with our powerful AI editing tools.',
+    icon: 'ImageIcon',
+    videoUrl: null,
+    cloudinaryPublicId: null,
+    posterUrl: null,
+    durationSeconds: null,
+    displayOrder: 1,
+    updatedAt: new Date(0).toISOString(),
+  },
+  {
+    id: 'default-map-animations',
+    title: 'Map Animations',
+    description: 'Generate beautiful, animated map routes for your travel vlogs and presentations automatically.',
+    icon: 'Map',
+    videoUrl: null,
+    cloudinaryPublicId: null,
+    posterUrl: null,
+    durationSeconds: null,
+    displayOrder: 2,
+    updatedAt: new Date(0).toISOString(),
+  },
+];
+
 const stateDir = (): string | null => {
   try {
-    const d = join(process.cwd(), '.aisnv-state');
+    // On Vercel, process.cwd() is read-only; use /tmp for writable fallback.
+    const base = process.env.VERCEL ? '/tmp' : process.cwd();
+    const d = join(base, '.aisnv-state');
     if (!existsSync(d)) mkdirSync(d, { recursive: true });
     return d;
   } catch (_) {
@@ -213,6 +254,9 @@ export async function getFeatures(): Promise<FeatureItem[]> {
     flushToDisk(dbVal);
     return sortItems(dbVal);
   }
+  // If DB is down and memory/disk are also empty, ship sensible defaults
+  // so the homepage never renders a blank "Key Features" section.
+  if (mem.length === 0) return DEFAULT_FEATURES;
   return mem;
 }
 

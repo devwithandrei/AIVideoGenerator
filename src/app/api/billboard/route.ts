@@ -15,7 +15,9 @@ import { join } from 'path';
 // Disk-backed memory fallback singleton for public billboard playlist
 const stateDir = (): string | null => {
   try {
-    const d = join(process.cwd(), '.aisnv-state');
+    // On Vercel, process.cwd() is read-only; use /tmp for writable fallback.
+    const base = process.env.VERCEL ? '/tmp' : process.cwd();
+    const d = join(base, '.aisnv-state');
     if (!existsSync(d)) mkdirSync(d, { recursive: true });
     return d;
   } catch (_) { return null; }
@@ -88,7 +90,7 @@ const fallbackHero = {
   headline: 'MiniMax H3 AI Video Generator',
   subheadline:
     'AISNV delivers high-speed, cost-efficient image and video generation with realistic visuals and synchronized audio — powered by MiniMax H3. Try it for free.',
-  videoUrl: '/videos/HeroVideo.mp4',
+  videoUrl: undefined as string | undefined,
   posterUrl: undefined as string | undefined,
 };
 
@@ -176,7 +178,12 @@ export async function GET() {
     }
   } catch (e) {
     const msg = shortMsg(e).replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
-    if (!DB_WARNED_PUB) { DB_WARNED_PUB = true; console.warn('[billboard/public] DB degraded:', msg); }
+    if (!DB_WARNED_PUB) {
+      DB_WARNED_PUB = true;
+      console.warn('[billboard/public] DB degraded:', msg);
+      // Log the full error once for debugging on Vercel
+      console.warn('[billboard/public] full error:', (e as Error)?.stack || String(e));
+    }
     return memResponse(msg);
   }
 

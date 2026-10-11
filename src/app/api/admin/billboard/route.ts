@@ -45,7 +45,7 @@ async function safeEnsureSchema() {
 type MemRow = Omit<BillboardVideo, 'createdAt' | 'updatedAt'> & { createdAt: string | Date; updatedAt?: string | Date };
 const STORAGE_KEY = '__AISNV_MEM_BILLBOARDS__';
 declare global { var __AISNV_MEM_BILLBOARDS__: MemRow[] | undefined; }
-function stateDir() { try { const d = join(process.cwd(), '.aisnv-state'); if (!existsSync(d)) mkdirSync(d, { recursive: true }); return d; } catch { return null; } }
+function stateDir() { try { const base = process.env.VERCEL ? '/tmp' : process.cwd(); const d = join(base, '.aisnv-state'); if (!existsSync(d)) mkdirSync(d, { recursive: true }); return d; } catch { return null; } }
 function statePath() { const d = stateDir(); return d ? join(d, 'billboard-mem.json') : null; }
 function storageLoadFromDisk(): MemRow[] {
   try {
