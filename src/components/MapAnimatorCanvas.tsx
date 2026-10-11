@@ -25,7 +25,7 @@ interface MapAnimatorCanvasProps {
 
 export function MapAnimatorCanvas({ mapImageUrl, onExport }: MapAnimatorCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);

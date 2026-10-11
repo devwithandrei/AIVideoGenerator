@@ -25,7 +25,7 @@ export const NewspaperSearchCanvas: React.FC<NewspaperSearchCanvasProps> = ({
   onProgress,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const [hasStartedRecording, setHasStartedRecording] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);

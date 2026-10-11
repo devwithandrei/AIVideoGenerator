@@ -34,7 +34,7 @@ export const NewspaperSpinCanvas: React.FC<NewspaperSpinCanvasProps> = ({
 }) => {
   console.log('NewspaperSpinCanvas render:', { name, theme, aspect, isGenerating });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const [hasStartedRecording, setHasStartedRecording] = useState(false);
   const [canvasReady, setCanvasReady] = useState(false);
 
