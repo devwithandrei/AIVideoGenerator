@@ -135,6 +135,7 @@ export async function ensureDbSchemaInitialized(force = false): Promise<{ ok: bo
   if (INITIALIZED && !force) return { ok: true, initialized: true };
 
   const firstErr: string[] = [];
+  let warned = false;
 
   for (const ddl of DDL_STATEMENTS) {
     try {
@@ -148,6 +149,10 @@ export async function ensureDbSchemaInitialized(force = false): Promise<{ ok: bo
         low.includes('relation') && low.includes('exist')
       ) {
         continue;
+      }
+      if (!warned) {
+        warned = true;
+        console.warn('[db/auto-init] DDL failed:', m.slice(0, 300));
       }
       if (!firstErr.length) firstErr.push(m.slice(0, 200));
     }

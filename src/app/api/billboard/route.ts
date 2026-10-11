@@ -181,8 +181,11 @@ export async function GET() {
     if (!DB_WARNED_PUB) {
       DB_WARNED_PUB = true;
       console.warn('[billboard/public] DB degraded:', msg);
-      // Log the full error once for debugging on Vercel
-      console.warn('[billboard/public] full error:', (e as Error)?.stack || String(e));
+      // Log the full error structure once for debugging on Vercel
+      const err = e as any;
+      const cause = err?.cause;
+      console.warn('[billboard/public] error.message:', err?.message?.slice(0, 500));
+      console.warn('[billboard/public] error.cause:', cause?.message || cause || '(none)');
     }
     return memResponse(msg);
   }
