@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { billboardVideos } from '@/lib/db/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { ensureDbSchemaInitialized } from '@/lib/db/auto-init';
 import {
@@ -91,44 +91,63 @@ function pickPlaylistMem(settings: BillboardSettings): MemRow[] {
  * Used when data was created locally while the DB was unreachable, so that
  * other environments (Vercel) can read it from Postgres.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function toUuid(id: string): string {
+  return UUID_RE.test(String(id)) ? String(id) : crypto.randomUUID();
+}
+
 async function syncDiskToDb(rows: MemRow[]): Promise<boolean> {
   if (!db || !rows.length) return false;
   try {
     for (const r of rows) {
-      await db.execute(sql.raw(`
-        INSERT INTO billboard_videos
-          (id, title, headline, subheadline, cloudinary_public_id, video_url,
-           thumbnail_url, poster_url, is_active, is_default, uploaded_by_admin_email,
-           duration_seconds, width, height, display_order, lighting_override, created_at, updated_at)
-        VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-        ON CONFLICT (id) DO UPDATE SET
-          title = EXCLUDED.title,
-          headline = EXCLUDED.headline,
-          subheadline = EXCLUDED.subheadline,
-          cloudinary_public_id = EXCLUDED.cloudinary_public_id,
-          video_url = EXCLUDED.video_url,
-          thumbnail_url = EXCLUDED.thumbnail_url,
-          poster_url = EXCLUDED.poster_url,
-          is_active = EXCLUDED.is_active,
-          is_default = EXCLUDED.is_default,
-          uploaded_by_admin_email = EXCLUDED.uploaded_by_admin_email,
-          duration_seconds = EXCLUDED.duration_seconds,
-          width = EXCLUDED.width,
-          height = EXCLUDED.height,
-          display_order = EXCLUDED.display_order,
-          lighting_override = EXCLUDED.lighting_override,
-          updated_at = EXCLUDED.updated_at
-      `), [
-        r.id, r.title, r.headline, r.subheadline, r.cloudinaryPublicId, r.videoUrl,
-        r.thumbnailUrl, r.posterUrl, r.isActive, r.isDefault, r.uploadedByAdminEmail,
-        r.durationSeconds, r.width, r.height, r.displayOrder, r.lightingOverride,
-        r.createdAt, r.updatedAt || r.createdAt,
-      ]);
+      // The DB id column is UUID. Local fallback ids are not UUIDs, so generate one.
+      const id = toUuid(r.id);
+      await db.insert(billboardVideos).values({
+        id,
+        title: r.title,
+        headline: r.headline,
+        subheadline: r.subheadline,
+        cloudinaryPublicId: r.cloudinaryPublicId,
+        videoUrl: r.videoUrl,
+        thumbnailUrl: r.thumbnailUrl,
+        posterUrl: r.posterUrl,
+        isActive: r.isActive,
+        isDefault: r.isDefault,
+        uploadedByAdminEmail: r.uploadedByAdminEmail,
+        durationSeconds: r.durationSeconds,
+        width: r.width,
+        height: r.height,
+        displayOrder: r.displayOrder ?? 0,
+        lightingOverride: r.lightingOverride,
+        createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+        updatedAt: r.updatedAt ? new Date(r.updatedAt) : new Date(),
+      }).onConflictDoUpdate({
+        target: billboardVideos.cloudinaryPublicId,
+        set: {
+          title: r.title,
+          headline: r.headline,
+          subheadline: r.subheadline,
+          videoUrl: r.videoUrl,
+          thumbnailUrl: r.thumbnailUrl,
+          posterUrl: r.posterUrl,
+          isActive: r.isActive,
+          isDefault: r.isDefault,
+          uploadedByAdminEmail: r.uploadedByAdminEmail,
+          durationSeconds: r.durationSeconds,
+          width: r.width,
+          height: r.height,
+          displayOrder: r.displayOrder ?? 0,
+          lightingOverride: r.lightingOverride,
+          updatedAt: r.updatedAt ? new Date(r.updatedAt) : new Date(),
+        },
+      });
     }
     return true;
   } catch (e) {
-    console.warn('[billboard/public] sync disk→db failed:', (e as Error)?.message?.slice(0, 200));
+    const err = e as any;
+    const cause = err?.cause?.message || err?.message || String(e);
+    console.warn('[billboard/public] sync disk→db failed:', cause?.slice(0, 400));
     return false;
   }
 }

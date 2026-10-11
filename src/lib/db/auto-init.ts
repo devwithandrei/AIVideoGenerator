@@ -48,6 +48,7 @@ const DDL_STATEMENTS: string[] = [
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
   )`,
   `ALTER TABLE billboard_videos ADD COLUMN IF NOT EXISTS lighting_override INTEGER`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_billboard_videos_cloudinary_id ON billboard_videos(cloudinary_public_id)`,
   `CREATE INDEX IF NOT EXISTS idx_billboard_videos_active ON billboard_videos(is_active)`,
   `CREATE INDEX IF NOT EXISTS idx_billboard_videos_order ON billboard_videos(display_order DESC)`,
   `CREATE TABLE IF NOT EXISTS credits (
@@ -111,9 +112,15 @@ const DDL_STATEMENTS: string[] = [
     status TEXT NOT NULL,
     stripe_session_id TEXT,
     stripe_payment_intent_id TEXT,
+    payment_method TEXT,
+    transaction_id TEXT,
+    metadata TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
   )`,
+  `ALTER TABLE purchases ADD COLUMN IF NOT EXISTS payment_method TEXT`,
+  `ALTER TABLE purchases ADD COLUMN IF NOT EXISTS transaction_id TEXT`,
+  `ALTER TABLE purchases ADD COLUMN IF NOT EXISTS metadata TEXT`,
   `CREATE INDEX IF NOT EXISTS idx_purchases_user ON purchases(user_id)`,
   `CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
