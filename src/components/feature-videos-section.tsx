@@ -32,8 +32,8 @@ const featuresEqual = (a: FeatureItem[], b: FeatureItem[]) => {
   });
 };
 
-export default function FeatureVideosSection() {
-  const [features, setFeatures] = useState<FeatureItem[]>([]);
+export default function FeatureVideosSection({ initialFeatures }: { initialFeatures?: FeatureItem[] }) {
+  const [features, setFeatures] = useState<FeatureItem[]>(initialFeatures ?? []);
 
   useEffect(() => {
     let alive = true;

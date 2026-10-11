@@ -4,18 +4,31 @@ import { Header } from "@/components/header"
 import BillboardHero from "@/components/billboard-hero"
 import FeatureVideosSection from "@/components/feature-videos-section"
 import { SignedIn, SignedOut } from '@clerk/nextjs'
+import { getBillboardPublicData } from "@/lib/billboard-public"
+import { getFeatures } from "@/lib/feature-videos"
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Fetch billboard + features server-side so the page renders with real data
+  // on first paint (no flash of fallback content) and loads faster.
+  const [billboardData, featuresData] = await Promise.all([
+    getBillboardPublicData(),
+    getFeatures().catch(() => []),
+  ])
+
   return (
     <div className="flex flex-col min-h-screen bg-background w-full max-w-none overflow-x-hidden">
       <div className="relative w-full max-w-none">
         <div className="absolute inset-x-0 top-0 z-40 w-full">
           <Header />
         </div>
-        <BillboardHero />
+        <BillboardHero
+          initialBillboard={billboardData.billboard}
+          initialPlaylist={billboardData.playlist}
+          initialSettings={billboardData.settings}
+        />
       </div>
       <main className="flex-1">
-        <FeatureVideosSection />
+        <FeatureVideosSection initialFeatures={featuresData} />
          <section className="w-full py-8 sm:py-12 md:py-24 lg:py-32">
           <div className="w-full max-w-none grid items-center justify-center gap-3 sm:gap-4 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-14 text-center">
             <div className="space-y-2 sm:space-y-3">

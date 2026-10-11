@@ -153,14 +153,24 @@ const RESOLUTION_ICON_CLASSES = {
   ultrawide: "text-amber-300",
 } as const;
 
-export default function BillboardHero() {
+export default function BillboardHero({
+  initialBillboard,
+  initialPlaylist,
+  initialSettings,
+}: {
+  initialBillboard?: BillboardVideo | null;
+  initialPlaylist?: BillboardVideo[];
+  initialSettings?: BillboardSettings;
+}) {
   const router = useRouter();
-  const [billboard, setBillboard] = useState<BillboardVideo | null>(null);
-  const [playlist, setPlaylist] = useState<BillboardVideo[]>([]);
-  const [settings, setSettings] = useState<BillboardSettings>({ displayMode: 'single', autoLoop: true, crossfadeMs: 450, backgroundLighting: 55 });
+  const [billboard, setBillboard] = useState<BillboardVideo | null>(initialBillboard ?? null);
+  const [playlist, setPlaylist] = useState<BillboardVideo[]>(initialPlaylist ?? []);
+  const [settings, setSettings] = useState<BillboardSettings>(
+    initialSettings ?? { displayMode: 'single', autoLoop: true, crossfadeMs: 450, backgroundLighting: 55 }
+  );
   const [playlistIndex, setPlaylistIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialBillboard && !(initialPlaylist && initialPlaylist.length));
   const [prompt, setPrompt] = useState("");
   const [modelId, setModelId] = useState<string>(MODELS[0].id);
   const [resolutionKey, setResolutionKey] = useState<string>(RESOLUTIONS[0].value);
