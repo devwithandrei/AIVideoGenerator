@@ -10,16 +10,22 @@ if (!connectionString) {
 }
 
 /**
- * The neon-serverless driver uses HTTP/WebSocket transport and does NOT support
- * native PostgreSQL parameters like `channel_binding`. Strip them to avoid
- * "Neon HTTP transport error" on Vercel.
+ * The neon-serverless driver uses HTTP/WebSocket transport and requires the
+ * DIRECT (non-pooler) Neon endpoint. The "-pooler" endpoint is a PgBouncer
+ * TCP proxy that does not expose the HTTP /sql API, causing
+ * "could not parse the HTTP request body: data did not match any variant of
+ * untagged enum Payload". We also strip native-only params like
+ * channel_binding/sslmode that the HTTP driver rejects.
  */
 function sanitizeConnectionString(url: string): string {
   try {
     const u = new URL(url);
+    // Convert pooler endpoint to direct endpoint (remove "-pooler" suffix)
+    if (u.hostname.includes('-pooler.')) {
+      u.hostname = u.hostname.replace('-pooler.', '.');
+    }
     // Remove params unsupported by the HTTP serverless driver
     ['channel_binding', 'sslmode'].forEach((k) => u.searchParams.delete(k));
-    // neon-serverless handles SSL internally; ensure no conflicting params
     return u.toString();
   } catch {
     return url;
