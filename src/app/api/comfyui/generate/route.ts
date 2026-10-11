@@ -3,7 +3,7 @@ import { comfyUIService, ComfyUIGenerateResult } from '@/lib/services/comfyui-se
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-export const maxDuration = 600;
+export const maxDuration = 300;
 
 // #region debug-point A:route-entry
 const __dbg = (() => {
