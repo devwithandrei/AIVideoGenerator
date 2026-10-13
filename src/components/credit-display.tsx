@@ -75,7 +75,7 @@ export function CreditDisplay() {
   // If user is admin, show unlimited credits without API call
   if (isAdmin) {
     return (
-      <Badge variant="outline" className="flex items-center gap-1">
+      <Badge variant="outline" className="flex items-center gap-1 px-1.5">
         <Zap className="h-3 w-3" />
         ∞
       </Badge>
@@ -89,7 +89,7 @@ export function CreditDisplay() {
 
   if (loading) {
     return (
-      <Badge variant="outline" className="flex items-center gap-1">
+      <Badge variant="outline" className="flex items-center gap-1 px-1.5">
         <Zap className="h-3 w-3" />
         {isAdmin ? '∞' : '0'}
       </Badge>
@@ -98,7 +98,7 @@ export function CreditDisplay() {
 
   if (error) {
     return (
-      <Badge variant="outline" className="flex items-center gap-1 text-red-500">
+      <Badge variant="outline" className="flex items-center gap-1 text-red-500 px-1.5">
         <Zap className="h-3 w-3" />
         Error
       </Badge>
@@ -106,7 +106,7 @@ export function CreditDisplay() {
   }
 
   return (
-    <Badge variant="outline" className="flex items-center gap-1">
+    <Badge variant="outline" className="flex items-center gap-1 px-1.5">
       <Zap className="h-3 w-3" />
       {isAdmin ? '∞' : (credits?.balance || 0)}
     </Badge>
