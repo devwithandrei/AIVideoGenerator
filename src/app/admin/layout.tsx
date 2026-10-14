@@ -1,5 +1,14 @@
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { Header } from "@/components/header";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger
+} from "@/components/ui/sidebar";
+import { DashboardNav } from "@/components/dashboard-nav";
 
 export default function AdminLayout({
   children,
@@ -8,14 +17,24 @@ export default function AdminLayout({
 }) {
   return (
     <AuthWrapper>
-      <div className="w-screen max-w-none !overflow-x-hidden min-h-screen flex flex-col m-0 p-0">
-        <div className="w-screen max-w-none m-0 p-0 flex-shrink-0">
+      <SidebarProvider defaultOpen={true}>
+        <Sidebar collapsible="icon">
+          <SidebarHeader>
+            <div className="flex items-center justify-end w-full">
+              <SidebarTrigger className="h-6 w-6" />
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <DashboardNav />
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
           <Header />
-        </div>
-        <main className="flex-1 bg-background w-screen max-w-none !overflow-x-hidden m-0 p-0">
-          {children}
-        </main>
-      </div>
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </AuthWrapper>
   );
-} 
+}

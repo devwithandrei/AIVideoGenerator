@@ -788,11 +788,11 @@ export default function VideoEditorPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen max-lg:h-auto flex flex-col bg-background">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 gap-3 sm:gap-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 sm:p-4 gap-3 md:gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
             <div className="flex items-center gap-2">
               <Video className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               <h1 className="text-lg sm:text-xl font-semibold">Video Editor</h1>
@@ -804,7 +804,7 @@ export default function VideoEditorPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-1 sm:gap-2 w-full md:w-auto justify-end">
             <Button variant="ghost" size="sm" onClick={handleUndo} className="h-8 w-8 sm:h-9 sm:w-9 p-0">
               <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
@@ -823,9 +823,9 @@ export default function VideoEditorPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden max-lg:overflow-visible">
         {/* Left Panel - Preview and Timeline */}
-        <div className="flex-1 flex flex-col min-h-0 order-2 lg:order-1">
+        <div className="flex-1 flex flex-col min-h-0 order-2 lg:order-1 max-lg:order-1">
           {/* Preview Area */}
           <div className="flex-1 p-2 sm:p-4 min-h-0 max-h-[40vh] lg:max-h-[60vh]">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
@@ -900,8 +900,8 @@ export default function VideoEditorPage() {
         </div>
 
         {/* Right Panel - Tools */}
-        <div className="w-full lg:w-80 border-t lg:border-l lg:border-t-0 bg-muted/30 order-1 lg:order-2">
-          <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 h-full overflow-y-auto video-editor-scroll">
+        <div className="w-full lg:w-80 border-t lg:border-l lg:border-t-0 bg-muted/30 order-1 lg:order-2 max-lg:order-2">
+          <div className="p-2 sm:p-4 space-y-2 sm:space-y-4 h-full max-lg:h-auto overflow-y-auto max-lg:overflow-visible video-editor-scroll">
             {/* Media Library */}
             <MediaLibrary
               onAddToTimeline={handleAddToTimeline}

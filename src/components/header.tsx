@@ -187,9 +187,9 @@ export function Header() {
             }
         >
           <div className="w-full h-full px-3 sm:px-6 md:px-8 lg:px-10 xl:px-14 flex items-center justify-between max-w-none gap-2">
-            {/* LEFT: logo + sidebar trigger (studio, mobile) */}
+            {/* LEFT: logo + sidebar trigger (studio/admin, mobile) */}
             <div className="flex items-center gap-2 min-w-0">
-              {isStudio && (
+              {hasSidebar && (
                 <Button
                   variant="ghost"
                   size="icon"
